@@ -927,12 +927,19 @@ const Voice = (() => {
   let voices = [], broken = false;
   const load = () => { try { voices = speechSynthesis.getVoices() || []; } catch (e) { voices = []; } };
   if (ok) { load(); try { speechSynthesis.onvoiceschanged = load; } catch (e) {} }
-  const F = ['samantha', 'karen', 'moira', 'tessa', 'serena', 'kate', 'susan', 'female', 'zira', 'aria', 'jenny', 'libby', 'sonia', 'natasha', 'hazel', 'google uk english female', 'google us english'];
-  const M = ['daniel', 'alex', 'fred', 'oliver', 'arthur', 'aaron', 'male', 'guy', 'david', 'ryan', 'mark', 'george', 'google uk english male', 'thomas'];
-  const score = (v, list) => { const n = v.name.toLowerCase(); const i = list.findIndex(w => n.includes(w)); return i < 0 ? 99 : i; };
+  // natural voices first; robotic / novelty voices (Fred, Albert, Zarvox, Eloquence voices…) are never used
+  const F = ['ava', 'samantha', 'allison', 'susan', 'zoe', 'nicky', 'serena', 'kate', 'karen', 'moira', 'tessa', 'martha', 'aria', 'jenny', 'libby', 'sonia', 'natasha', 'emma', 'michelle', 'google us english', 'google uk english female', 'hazel', 'zira', 'female'];
+  const M = ['daniel', 'evan', 'tom', 'nathan', 'aaron', 'arthur', 'oliver', 'guy', 'ryan', 'andrew', 'brian', 'christopher', 'eric', 'george', 'david', 'mark', 'google uk english male', 'alex', 'male'];
+  const BAD = /\b(fred|albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|junior|ralph|kathy|vicki|victoria|bruce|agnes|princess|deranged|hysterical|pipe organ|eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley|espeak|robot)\b/i;
+  const score = (v, list) => {
+    const n = v.name.toLowerCase(); const i = list.findIndex(w => n.includes(w));
+    let sc = i < 0 ? 99 : i;
+    if (/premium|enhanced|natural|neural/.test(n)) sc -= 60; else if (/google|online/.test(n) || v.localService === false) sc -= 30;
+    return sc;
+  };
   function pick(gender, idx, lang = 'en') {
     if (!voices.length) load();
-    let pool = voices.filter(v => (v.lang || '').toLowerCase().startsWith(lang));
+    let pool = voices.filter(v => (v.lang || '').toLowerCase().startsWith(lang) && !BAD.test(v.name));
     if (lang === 'en') {
       const pref = pool.filter(v => /en[-_](gb|us|au|ie|za|in)/i.test(v.lang));
       if (pref.length) pool = pref;
@@ -940,7 +947,7 @@ const Voice = (() => {
     if (!pool.length) return null;
     const list = gender === 'm' ? M : F;
     const sorted = pool.slice().sort((a, b) => score(a, list) - score(b, list));
-    const good = sorted.filter(v => score(v, list) < 99);
+    const good = sorted.filter(v => score(v, list) < 90);
     const use = good.length ? good : sorted;
     return use[idx % use.length];
   }
@@ -5898,8 +5905,9 @@ const Track = {
   sendWriting(title, text) {
     const c = this.parse(), st = Store.mem.student;
     if (!c || !c.f.writing || !st || Store.mem.role === 'teacher') return;
-    const v = { name: st.name, sid: st.sid, sec: st.sec || '', pct: overall() + '%', detail: this.detail(), writing: `${title}: ${text}` };
+    const v = { name: st.name, sid: st.sid, sec: st.sec || '-', pct: overall() + '%', detail: this.detail(), writing: `${title}: ${text}` };
     const body = new URLSearchParams(); Object.entries(c.f).forEach(([k, e]) => { if (v[k] !== undefined) body.append(e, v[k]); });
+    body.append('fvv', '1'); body.append('pageHistory', '0');
     try { if (!(navigator.sendBeacon && navigator.sendBeacon(c.url, body))) fetch(c.url, { method: 'POST', mode: 'no-cors', body, keepalive: true }).catch(() => {}); } catch (e) {}
     Store.mem.trackDirty = false; Store.save();
   },
@@ -5908,9 +5916,10 @@ const Track = {
     const c = this.parse(), st = Store.mem.student;
     if (!c || !st || Store.mem.role === 'teacher') return false;
     if (!force && !Store.mem.trackDirty) return false;
-    const v = { name: st.name, sid: st.sid, sec: st.sec || '', pct: overall() + '%', detail: this.detail() };
+    const v = { name: st.name, sid: st.sid, sec: st.sec || '-', pct: overall() + '%', detail: this.detail() };
     const body = new URLSearchParams();
     Object.entries(c.f).forEach(([k, e]) => { if (v[k] !== undefined) body.append(e, v[k]); });
+    body.append('fvv', '1'); body.append('pageHistory', '0');
     let ok = false;
     try { ok = !!(navigator.sendBeacon && navigator.sendBeacon(c.url, body)); } catch (e) {}
     if (!ok) { try { fetch(c.url, { method: 'POST', mode: 'no-cors', body, keepalive: true }).catch(() => {}); ok = true; } catch (e) {} }
@@ -5989,6 +5998,7 @@ function boot() {
   if (!Store.mem.student && Store.mem.role !== 'teacher') askStudent(false);
   else if (Store.mem.student && !Store.mem.toured && (location.hash || '#home') === '#home') setTimeout(() => { if (!$('.modal')) startTour(); }, 700);
   if (Store.mem.trackDirty) setTimeout(() => Track.flush(), 4000);
+  setTimeout(() => WA.load(), 2500);
   Cloud.init().then(() => { refreshTop(); if (location.hash === '#board') viewBoard(); });
 }
 document.addEventListener('DOMContentLoaded', boot);
