@@ -560,10 +560,44 @@ textarea.open{width:100%;min-height:120px;border:1.5px solid var(--line);border-
 .tt-dots{display:flex;gap:4px;justify-content:center;margin:0 0 10px}
 .tt-dots i{width:6px;height:6px;border-radius:50%;background:#DDD6C8}.tt-dots i.on{background:var(--c);width:16px;border-radius:4px}
 .autonote{margin:22px 0 0;background:var(--okbg);border:1px solid #B9E5CF;color:#0E6B45;border-radius:14px;padding:10px 14px;font-weight:800;font-size:14.5px;text-align:center}
+.lvid .lvh{display:flex;align-items:center;gap:10px;margin-bottom:10px}.lvid .lvh .ai{font-size:22px}
+.lvid video{display:block;width:100%;border-radius:14px;background:#000;aspect-ratio:16/9}
 .tourbar{display:flex;align-items:center;gap:8px;width:100%;background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px 12px;margin:8px 0 0;direction:rtl;text-align:right;font-family:'Cairo','Tajawal',sans-serif;color:var(--ink);box-shadow:0 1px 2px rgba(30,35,48,.04)}
 .tourbar .ic{font-size:15px;flex:none}
 .tourbar .tx{flex:1;min-width:0;font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tourbar .go{flex:none;font-size:13px;font-weight:800;color:var(--c2)}
+
+/* ===== writing with automatic checks ===== */
+.wtask{background:var(--ct);border-radius:12px;padding:10px 12px;margin:0 0 12px;font-size:14px;line-height:1.6}
+.wtask b{color:var(--c2)}
+.wtask ul{margin:4px 0 0;padding-left:18px}
+.wfbk{margin-top:10px}
+.wchecks{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.wchecks span{border-radius:999px;padding:3px 10px;font-size:13px;font-weight:800}
+.wchecks .ok{background:var(--okbg);color:#0E6B45}.wchecks .no{background:var(--badbg);color:#9B2C2C}
+.wgood{background:var(--okbg);color:#0E6B45;border-radius:12px;padding:9px 12px;font-weight:800}
+.wiss>b{display:block;margin:2px 0 6px;color:#9B2C2C}
+.wi{border:1px solid #F3C9C9;background:#FFF8F8;border-radius:12px;padding:9px 11px;margin-top:6px}
+.wi .wq{font-weight:800}.wi .wq s{color:#9B2C2C}
+.wi .ws{margin-top:2px;color:#0E6B45;font-weight:800}
+.wi .we{margin-top:4px;font-size:13.5px;color:#4B5260;line-height:1.55}
+.wi .we .ar{display:block;direction:rtl;text-align:right;font-family:'Cairo','Tajawal',sans-serif;color:#5E4210}
+.wmodel{margin-top:12px;background:#FFF8E6;border:1px solid #F3D9A4;border-radius:12px;padding:10px 12px;color:#5E4210;line-height:1.65}
+.wnote2{font-size:12.5px;color:var(--muted);margin-top:8px}
+
+/* ===== speaking with the microphone ===== */
+.sayb{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0 8px}
+.micbtn{border:1.5px solid var(--c);background:#fff;color:var(--c2);border-radius:999px;padding:7px 15px;font-weight:800}
+.micbtn[data-on="1"]{background:#D64545;border-color:#D64545;color:#fff;animation:micp 1.2s ease-in-out infinite}
+@keyframes micp{0%,100%{box-shadow:0 0 0 0 rgba(214,69,69,.45)}50%{box-shadow:0 0 0 8px rgba(214,69,69,0)}}
+.mst{font-size:13px;color:var(--muted);font-weight:700}
+.mst.err{display:block;direction:rtl;text-align:right;font-family:'Cairo','Tajawal',sans-serif;color:#9B2C2C;width:100%}
+.heard{font-size:14px;color:#4B5260;margin-top:2px}.heard .hl{font-weight:800;color:var(--c2)}
+.sayt{font-size:18px;font-weight:800;line-height:1.6}
+.sayt .wg{color:#0E6B45;background:#D4F1E3;border-radius:5px;padding:0 2px}
+.sayt .wr{color:#9B2C2C;background:#FBD9D9;border-radius:5px;padding:0 2px}
+.spfb{margin-top:8px}
+.hint .arh{display:block;margin-top:4px;direction:rtl;text-align:right;font-family:'Cairo','Tajawal',sans-serif;color:#4B5260;line-height:1.7}
 </style>
 </head>
 <body>
@@ -1201,6 +1235,8 @@ class StoryPlayer {
 /* ===== Course data: shared ===== */
 const UNITS = [];
 const AUDIO = {}; // listening files: AUDIO['u2-l1'] = 'audio/u2-l1.mp3'
+// listening videos made by the teacher (shown instead of the audio player)
+const LVIDEO = { 'u2-lw': 'audio/listening/u2-lw.mp4', 'u2-l1': 'audio/listening/u2-l1.mp4', 'u3-l1': 'audio/listening/u3-l1.mp4', 'u3-l2': 'audio/listening/u3-l2.mp4', 'u5-l1': 'audio/listening/u5-l1.mp4', 'u5-l2': 'audio/listening/u5-l2.mp4' };
 const S = t => `<span class="k s">${t}</span>`;
 const V = t => `<span class="k v">${t}</span>`;
 const H = t => `<span class="k h">${t}</span>`;
@@ -1214,12 +1250,12 @@ const boardScene = (lines) => ({ bg: 'board', cast: [{ k: 'T', x: 1070 }], lines
 const COURSE = {
   teacher: 'Mrs. Shuaa S. Alzahrani',
   // automatic progress tracking: paste the Google Form pre-filled link here
-  // (answers typed in the pre-filled link: name, sid, sec, pct, detail)
-  trackForm: '',
+  // (answers typed in the pre-filled link: name, sid, sec, pct, detail, writing)
+  trackForm: 'https://docs.google.com/forms/d/e/1FAIpQLSfrYqX0K9hhgT0vnFJVUH4xwPrFXXjxoXkydDWBlqGR-6BhWg/viewform?usp=pp_url&entry.2080743103=name&entry.1135664278=sid&entry.1303986428=sec&entry.103655567=pct&entry.180609225=detail&entry.16680045=writing',
   // paste the Microsoft Forms link of the student survey here
-  surveyUrl: '',
+  surveyUrl: 'https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=t2SN3tp5mEGAwnuENDSDT3XthHuB89dGjRxgC016I-JURjQ1WkJKT1VVVTQyNTZJSzlIM0hUWE5IQi4u',
   // English 3 Quest (class game)
-  questUrl: 'https://claude.ai/artifact/PjQF6YR7Y3cX2Mgo26VK5B',
+  questUrl: 'quest/index.html', // the game lives in the quest folder of this site
   college: 'TVTC',
   infoHTML: `
   <div class="grid2">
@@ -1702,13 +1738,32 @@ UNITS.push({
       ] }
     ] },
     { k: 'listening', blocks: [
+      { t: 'audio', key: 'u2-lw', label: 'Listening: Problems at work (Amal and Hannah)' },
+      { t: 'ex', id: 'u2-lw', k: 'tf', title: 'Listen and choose True or False', hint: 'A manager talks to Amal about a problem with her colleague, Hannah.', items: [
+        { q: 'Amal’s boss called her to the office because he wanted to fire her.', a: false, why: 'He called her because she looked unhappy and he knew about her argument with Hannah.' },
+        { q: 'The problem at work is new.', a: false, why: 'Amal says: “It has been going on for a long time now.”' },
+        { q: 'Hannah is always late and doesn’t do her job.', a: true, why: 'Amal says Hannah is always late, her work is not reliable, and Amal had to finish her job.' },
+        { q: 'Amal didn’t talk to Hannah about her problem.', a: false, why: 'Amal says: “We discussed it several times.”' },
+        { q: 'Hannah’s boss is going to talk to her to try and fix the problem.', a: true, why: 'The manager says: “Let me try to talk to her and see what we can do.”' }
+      ] },
+      { t: 'transcript', x: { cast: { m: { name: 'Manager' }, a: { name: 'Amal' } }, lines: [
+        { k: 'm', t: 'Thanks for coming in, Amal. I asked to come to my office because I noticed that you have been quite unhappy in the last few days and I also know you had an argument with Hannah. Can you tell me what happened?' },
+        { k: 'a', t: 'It has been going on for a long time now. We just can’t work together I’m afraid. We should work together but she is impossible to work with. She is always late and her work is not reliable. Last week we had a very important deadline and she simply didn’t come to work and I had to stay in the office every night to finish her job.' },
+        { k: 'm', t: 'You know she has a big family and her children are often sick. Did you talk to her about this?' },
+        { k: 'a', t: 'Yes, we discussed it several times and she always promises to keep the deadlines and come to work more often. But last week she let me down again and the whole department had to work extra hard to finish the job in time.' },
+        { k: 'm', t: 'I’m really sorry to hear this. Do you have a suggestion to solve this problem?' },
+        { k: 'a', t: 'I have tried everything. I don’t know what to do.' },
+        { k: 'm', t: 'Will it help if I talk to her?' },
+        { k: 'a', t: 'Maybe. I think she listens to you more than to me.' },
+        { k: 'm', t: 'OK, let me try to talk to her and see what we can do. Thanks for the information and your hard work.' }
+      ] } },
       { t: 'audio', key: 'u2-l1', label: 'Listening: Dream jobs' },
-      { t: 'ex', id: 'u2-l1', k: 'tf', nokey: true, pending: 'Saved ✓ — marked when the audio is added', title: 'Listen and choose True or False', items: [
-        { q: 'The computer programmer wants to develop a program or an application to make a lot of money.' },
-        { q: "The computer programmer wouldn't like working for a company and having a routine." },
-        { q: 'The school student thinks working in a zoo would be good because you work regular hours, work with people and help endangered animals.' },
-        { q: 'The third speaker aims to help students to find their passions.' },
-        { q: 'The last speaker likes his job because he gets to take a break from his children at home.' }
+      { t: 'ex', id: 'u2-l1', k: 'tf', why: 'Watch the video again and listen carefully for the part about this question.', title: 'Listen and choose True or False', items: [
+        { q: 'The computer programmer wants to develop a program or an application to make a lot of money.', a: true },
+        { q: "The computer programmer wouldn't like working for a company and having a routine.", a: true },
+        { q: 'The school student thinks working in a zoo would be good because you work regular hours, work with people and help endangered animals.', a: true },
+        { q: 'The third speaker aims to help students to find their passions.', a: true },
+        { q: 'The last speaker likes his job because he gets to take a break from his children at home.', a: false }
       ] }
     ] },
     { k: 'grammar', blocks: [
@@ -1947,16 +2002,16 @@ UNITS.push({
     ] },
     { k: 'listening', blocks: [
       { t: 'audio', key: 'u3-l1', label: 'Listening 1: Nadine, Judy and Razan' },
-      { t: 'ex', id: 'u3-l1', k: 'tf', nokey: true, pending: 'Saved ✓ — marked when the audio is added', title: 'Read the statements. True or false?', items: [
-        { q: "Nadine met Judy's manager from work." }, { q: 'Razan left a good impression on Nadine.' }, { q: 'The two people met at a gathering at the mall.' },
-        { q: 'Judy has talked to Razan about this problem already.' }, { q: 'Razan accepted the talk from Judy.' }, { q: "Judy thinks Razan is this way because she can't recognize people's body language." }
+      { t: 'ex', id: 'u3-l1', k: 'tf', why: 'Watch the video again and listen carefully for the part about this question.', title: 'Read the statements. True or false?', items: [
+        { q: "Nadine met Judy's manager from work.", a: false }, { q: 'Razan left a good impression on Nadine.', a: false }, { q: 'The two people met at a gathering at the mall.', a: false },
+        { q: 'Judy has talked to Razan about this problem already.', a: true }, { q: 'Razan accepted the talk from Judy.', a: false }, { q: "Judy thinks Razan is this way because she can't recognize people's body language.", a: true }
       ] },
-      { t: 'ex', id: 'u3-l2', k: 'mcq', nokey: true, pending: 'Saved ✓ — marked when the audio is added', title: 'Choose the best answer', items: [
-        { q: 'How did Razan act when she met Nadine?', o: ['In a humble way.', 'In an arrogant way.', 'She was very calm and quiet.'] },
-        { q: 'When Nadine told Judy the story, how did she react?', o: ['She agreed with what Nadine told her.', 'She was surprised and told her the opposite.', "She didn't say anything."] },
-        { q: 'Judy told Nadine that she would see the other side of Razan after…', o: ['they work together.', 'they had spent more time together.', 'they fight.'] },
-        { q: 'The idea Judy has about why Razan acts like that when she meets people is based on…', o: ['what psychologists say.', 'what her friends say.', 'what her doctor says.'] },
-        { q: 'People at work think Razan is…', o: ['humble', 'friendly', 'arrogant'] }
+      { t: 'ex', id: 'u3-l2', k: 'mcq', why: 'Watch the video again and listen carefully for the part about this question.', title: 'Choose the best answer', items: [
+        { q: 'How did Razan act when she met Nadine?', o: ['In a humble way.', 'In an arrogant way.', 'She was very calm and quiet.'], a: 1 },
+        { q: 'When Nadine told Judy the story, how did she react?', o: ['She agreed with what Nadine told her.', 'She was surprised and told her the opposite.', "She didn't say anything."], a: 1 },
+        { q: 'Judy told Nadine that she would see the other side of Razan after…', o: ['they work together.', 'they had spent more time together.', 'they fight.'], a: 1 },
+        { q: 'The idea Judy has about why Razan acts like that when she meets people is based on…', o: ['what psychologists say.', 'what her friends say.', 'what her doctor says.'], a: 0 },
+        { q: 'People at work think Razan is…', o: ['humble', 'friendly', 'arrogant'], a: 2 }
       ] },
       { t: 'ex', id: 'u3-l3', k: 'mcq', title: 'Vocabulary from the listening: complete the definitions', items: [
         { q: 'Someone who acts like he/she is better than others is…', o: ['humble', 'arrogant', 'caring'], a: 1 },
@@ -2526,17 +2581,17 @@ UNITS.push({
     ] },
     { k: 'listening', blocks: [
       { t: 'audio', key: 'u5-l1', label: 'Listening 1: Five important decisions' },
-      { t: 'ex', id: 'u5-l1', k: 'mcq', nokey: true, pending: 'Saved ✓ — marked when the audio is added', title: 'Choose the correct answer', items: [
-        { q: 'The five speakers:', o: ['had positive results for their decisions.', 'have different results for their decisions (positive and negative).', "don't all clearly say the result of their decisions."] },
-        { q: "The first speaker's important decision was:", o: ['choosing to start gymnastics when she was young.', 'enrolling her daughter in gymnastics classes.', 'leaving gymnastics classes at a young age.'] },
-        { q: "The second speaker's important decision was:", o: ['starting his own company.', 'starting a blog.', 'attending webinars.'] },
-        { q: "The third speaker's big decision was:", o: ['fighting with her sister.', 'meeting up with her sister after a long time.', 'moving to another city.'] },
-        { q: "The fourth speaker's important decision is:", o: ['becoming an actor.', 'becoming a script writer.', 'writing a novel.'] },
-        { q: "The fifth speaker's important decision is:", o: ['moving and working in different countries.', 'becoming a teacher.', 'trying a new job.'] }
+      { t: 'ex', id: 'u5-l1', k: 'mcq', why: 'Watch the video again and listen carefully for the part about this question.', title: 'Choose the correct answer', items: [
+        { q: 'The five speakers:', o: ['had positive results for their decisions.', 'have different results for their decisions (positive and negative).', "don't all clearly say the result of their decisions."], a: 1 },
+        { q: "The first speaker's important decision was:", o: ['choosing to start gymnastics when she was young.', 'enrolling her daughter in gymnastics classes.', 'leaving gymnastics classes at a young age.'], a: 0 },
+        { q: "The second speaker's important decision was:", o: ['starting his own company.', 'starting a blog.', 'attending webinars.'], a: 1 },
+        { q: "The third speaker's big decision was:", o: ['fighting with her sister.', 'meeting up with her sister after a long time.', 'moving to another city.'], a: [0, 1] },
+        { q: "The fourth speaker's important decision is:", o: ['becoming an actor.', 'becoming a script writer.', 'writing a novel.'], a: 1 },
+        { q: "The fifth speaker's important decision is:", o: ['moving and working in different countries.', 'becoming a teacher.', 'trying a new job.'], a: [0, 1, 2] }
       ] },
       { t: 'audio', key: 'u5-l2', label: 'Listening 2: Ronan and Jo' },
-      { t: 'ex', id: 'u5-l2', k: 'tf', nokey: true, pending: 'Saved ✓ — marked when the audio is added', title: 'True or false?', items: [
-        { q: 'Both Ronan and Jo have a job.' }, { q: 'Either Ronan or Jo works at home.' }, { q: 'Neither Ronan nor Jo have flexible working hours.' }
+      { t: 'ex', id: 'u5-l2', k: 'tf', why: 'Watch the video again and listen carefully for the part about this question.', title: 'True or false?', items: [
+        { q: 'Both Ronan and Jo have a job.', a: true }, { q: 'Either Ronan or Jo works at home.', a: true }, { q: 'Neither Ronan nor Jo have flexible working hours.', a: false }
       ] }
     ] },
     { k: 'grammar', blocks: [
@@ -2942,12 +2997,20 @@ UNITS.forEach(u => {
 /* ===== Lessons: every unit is split into two lessons (A / B), one grammar topic each, plus a final Revision ===== */
 (function buildLessons() {
   // which lesson each original block goes to, by position in its section: A, B, X (both) or - (dropped / rebuilt)
+  /* the "A balanced life" scene of the Unit 5 story, as its own video for Part 2 */
+  (() => {
+    const u5 = UNITS.find(u => u.key === 'u5'), vs = u5 && u5.sections.find(s => s.k === 'video'), vb = vs && vs.blocks.find(b => b.id === 'u5-v');
+    if (!vb || vs.blocks.some(b => b.id === 'u5-vb')) return;
+    const sc = vb.script.scenes, N = sc[0].lines.length + sc[1].lines.length, t = TIMINGS['u5-v'];
+    if (t && t.l.length > N) { const off = t.l[N][0] - 0.5; TIMINGS['u5-vb'] = { total: +(t.total - off).toFixed(3), l: t.l.slice(N).map(([a, b]) => [+(a - off).toFixed(3), +(b - off).toFixed(3)]) }; }
+    vs.blocks.push({ t: 'video', id: 'u5-vb', script: { ...vb.script, title: 'A Balanced Life', sub: 'Unit 5 · Part 2 · Mira finds balance', scenes: [sc[2]] } });
+  })();
   const SPLIT = {
     u1: { intro: 'AAA', video: 'AA', reading: 'AAA', grammar: 'AAAABBBBB', vocab: 'XB', speaking: 'AA', extra: 'BBBBBBBB' },
-    u2: { intro: 'AAA', video: 'AA', reading: 'AAABB', listening: 'BB', grammar: '-BB', vocab: 'XBB', speaking: 'BB', extra: 'BBBBBBBB' },
-    u3: { intro: 'AA', video: 'AA', reading: 'AAABBB', listening: 'AAAABBBB', grammar: 'AAABBB', vocab: 'XAAB', speaking: 'B', extra: 'BBBBBBBB' },
+    u2: { intro: 'AAA', video: 'AA', reading: 'AAABB', listening: 'AAABB', grammar: '-BB', vocab: 'XBB', speaking: 'BB', extra: 'BBBBBBBB' },
+    u3: { intro: 'AA', video: 'AA', reading: 'AAABBB', listening: 'AAAAABBB', grammar: 'AAABBB', vocab: 'XAAB', speaking: 'B', extra: 'BBBBBBBB' },
     u4: { intro: 'AAA', video: 'AA', reading: 'AAABBB', grammar: 'AAAABBB', vocab: 'XB', speaking: 'AB', extra: 'BBBBBBBB' },
-    u5: { intro: 'AA', video: 'AA', reading: 'AAA', listening: 'AABB', grammar: 'AAABB', vocab: 'XABB', speaking: 'BA', extra: 'BBBBBBBBBB' }
+    u5: { intro: 'AA', video: 'AAB', reading: 'AAA', listening: 'AABB', grammar: 'AAABB', vocab: 'XABB', speaking: 'BA', extra: 'BBBBBBBBBB' }
   };
   const about = t => `<b>About this lesson</b><p style="margin:6px 0 0">${t}</p>`;
   const META = {
@@ -3660,6 +3723,43 @@ UNITS.forEach(u => {
   const placeMcq = it => { const right = it.o[it.a]; const rest = it.o.filter((_, i) => i !== it.a); const at = POSP[pk++ % POSP.length] % it.o.length; rest.splice(at, 0, right); it.o = rest; it.a = at; };
   const placeInline = it => { it.s = it.s.replace(/\[([^\]]+)\]/g, (m, inner) => { const opts = inner.split('|'); const ri = opts.findIndex(x => x.startsWith('*')); if (ri < 0) return m; const right = opts[ri]; const rest = opts.filter((_, i) => i !== ri); const POS2 = [1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1]; const at = opts.length === 2 ? POS2[pk++ % POS2.length] : POSP[pk++ % POSP.length] % opts.length; rest.splice(at, 0, right); return '[' + rest.join('|') + ']'; }); };
   Object.values(PRACTICE).forEach(list => list.forEach(b => { if (b.t !== 'ex') return; if (b.k === 'mcq') b.items.forEach(placeMcq); if (b.k === 'inline') b.items.forEach(placeInline); }));
+  const WRITE_IDS = ['u1-s1', 'u2-s1', 'u3-l6', 'u4-s1', 'u5-s2'];
+  lessons.forEach(L => {
+    const wb = [];
+    L.sections.forEach(s => { s.blocks = s.blocks.filter(b => { if (WRITE_IDS.includes(b.id)) { wb.push(b); return false; } return true; }); });
+    L.sections = L.sections.filter(s => s.blocks.length);
+    if (wb.length) { const ci = L.sections.findIndex(s => s.k === 'cando'); L.sections.splice(ci < 0 ? L.sections.length : ci, 0, { k: 'writing', blocks: wb }); }
+  });
+
+  const SPK = {
+    u1a: { q: ['Would you like to take an online course? Which one, and why?', 'What can you do better in a class at college than online?', 'How can a tutor help a student?'],
+      ra: ['I read a brochure about an online course.', 'I can develop my skills with a good tutor.', 'Classes at college help me participate more.'] },
+    u1b: { q: ['What do you usually do after college?', 'What did you do last weekend?', 'Is feedback from your teacher important? Why?'],
+      ra: ['I usually study in the evening.', 'Last week I got a certificate.', 'My teacher gives me feedback after every assessment.'] },
+    u2a: { q: ['What is more important for you: salary or experience? Why?', 'What will you do if a colleague does not do her job?', 'How can people solve a conflict at work?'],
+      ra: ['If I work hard, I will get a good salary.', 'A good colleague is someone you can trust.', 'Experience is important for my career.'] },
+    u2b: { q: ['What is your dream job? Why?', 'If you were an entrepreneur, what company would you start?', 'Are you a quick learner? Give an example.'],
+      ra: ['If I were an entrepreneur, I would start my own company.', 'My dream job is to help clients every day.', 'I am a quick learner, and I love new challenges.'] },
+    u3a: { q: ['What do you do to make a good first impression?', 'What must you do before a job interview?', 'Describe a person who left a good impression on you.'],
+      ra: ['You must be punctual when you meet someone new.', 'A good first impression needs self confidence.', 'She was humble, genuine and attentive.'] },
+    u3b: { q: ['What are you going to learn next year?', 'Who is your mentor, or who would you like as a mentor?', 'What will you do to leave your comfort zone?'],
+      ra: ['I am going to learn a new skill next year.', 'A good mentor is curious and dedicated.', 'I will leave my comfort zone and try new things.'] },
+    u4a: { q: ['Which device have you used the most this year?', 'What is the most important invention in your opinion? Why?', 'Have you ever felt that you cannot live without your phone?'],
+      ra: ['I have used my phone every day this week.', 'The internet is the most important invention.', 'Technology has changed the way we learn.'] },
+    u4b: { q: ['How is technology used in your college?', 'Would you like to start up a business online? What would you sell?', 'Why is privacy important on the internet?'],
+      ra: ['Many tasks are done online today.', 'Information is stored in the cloud.', 'Technology has made education more accessible.'] },
+    u5a: { q: ['How do you make a big decision?', 'Tell us about a decision that made you feel relieved.', 'Who do you ask for advice before you decide?'],
+      ra: ['I always think about the consequences before I decide.', 'It was a really difficult decision.', 'I was absolutely delighted with the result.'] },
+    u5b: { q: ['What are your priorities in life?', 'How do you stop procrastination?', 'How do you keep a balance between your studies and your family?'],
+      ra: ['My family and my studies are both my priorities.', 'I can either study in the morning or at night.', 'Neither money nor success is enough without balance.'] }
+  };
+  lessons.forEach(L => {
+    const x = SPK[L.key]; if (!x) return;
+    let sp = L.sections.find(s => s.k === 'speaking');
+    if (!sp) { sp = { k: 'speaking', blocks: [] }; const wi = L.sections.findIndex(s => s.k === 'writing' || s.k === 'cando'); L.sections.splice(wi < 0 ? L.sections.length : wi, 0, sp); }
+    sp.blocks.push({ t: 'ex', id: L.key + '-sp', k: 'open', speak: true, title: 'Speaking practice: answer the questions', prompts: x.q.map(q => ({ q, ph: 'Tap 🎤 Speak, or type your answer…' })) });
+    sp.blocks.push({ t: 'ex', id: L.key + '-ra', k: 'say', optional: true, title: 'Pronunciation: read aloud', hint: 'Tap 🔊 Listen, then 🎤 Read aloud. Green words are clear. Practise the red words again.<span class="arh">🎤 سجّلي صوتك وأنتِ تقرئين الجملة: الكلمة اللي نطقتيها صح تطلع <b style="color:#0E6B45">خضراء</b>، والغلط تطلع <b style="color:#9B2C2C">حمراء</b> عشان تتدربين عليها. أول مرة بيطلب منك المتصفح السماح باستخدام المايك، اضغطي «سماح».</span>', items: x.ra.map(s => ({ s })) });
+  });
   lessons.forEach(L => {
     const words = Object.keys(L.glossary).filter(w => !/\d/.test(w));
     const dict = { t: 'ex', id: L.key + '-dict', k: 'dict', title: 'Dictation: listen and write the word', hint: 'Tap 🔊 Listen, then write the word. Check your spelling at the end.',
@@ -3774,7 +3874,8 @@ const SECS = {
   listening: { en: 'Listening', i: '🎧', d: 'Listen to the audio, then answer.' },
   grammar: { en: 'Grammar', i: '🧩', d: 'Watch the video, learn the rule step by step, then practise.' },
   vocab: { en: 'Vocabulary', i: '🔤', d: 'Word cards, then practice.' },
-  speaking: { en: 'Speaking & Writing', i: '🗣️', d: 'Say what you think, then write.' },
+  speaking: { en: 'Speaking', i: '🗣️', d: 'Answer out loud with 🎤, then read sentences aloud. Green words are clear, red words need practice.' },
+  writing: { en: 'Writing', i: '✍️', d: 'Write, then tap “Check my writing”. The platform checks grammar, tense and punctuation.' },
   extra: { en: 'Extra', i: '🚀', d: 'Enrichment: extra listening, useful phrases, a unit challenge and a real-life task.' },
   practice: { en: 'Practice', i: '🎯', d: 'A practice test and a dictation. If you make a mistake, you see why.' },
   cando: { en: 'I can', i: '✅', d: 'Check yourself at the end of the lesson.' },
@@ -3856,7 +3957,7 @@ const Cloud = {
 
 /* ---------- unit bookkeeping ---------- */
 function flat(sec) { const out = []; sec.blocks.forEach(b => { if (b.builder) out.push({ ...b.builder, k: 'builder', t: 'ex' }); if (b.id) out.push(b); }); return out; }
-function unitExIds(u) { const ids = []; u.sections.forEach(s => flat(s).forEach(b => ids.push(b.id))); return ids; }
+function unitExIds(u) { const ids = []; u.sections.forEach(s => flat(s).forEach(b => { if (!b.optional) ids.push(b.id); })); return ids; }
 function exMeta(id) { for (const u of UNITS) for (const s of u.sections) for (const b of flat(s)) if (b.id === id) return { u, s, b }; return null; }
 function unitStats(u, exmap = Store.ex) {
   const ids = unitExIds(u); let done = 0, sum = 0, n = 0;
@@ -3864,7 +3965,7 @@ function unitStats(u, exmap = Store.ex) {
   return { total: ids.length, done, pct: ids.length ? Math.round(done / ids.length * 100) : 0, avg: n ? Math.round(sum / n) : null };
 }
 function progText(s) { return `${s.done} / ${s.total} tasks · ${s.pct}%${s.avg !== null ? ` · your average ${s.avg}%` : ''}`; }
-function secStats(s) { const ids = flat(s).map(b => b.id); const done = ids.filter(id => Store.ex[id] && Store.ex[id].c).length; return { total: ids.length, done }; }
+function secStats(s) { const ids = flat(s).filter(b => !b.optional).map(b => b.id); const done = ids.filter(id => Store.ex[id] && Store.ex[id].c).length; return { total: ids.length, done }; }
 function overall(exmap = Store.ex) { let t = 0, d = 0; UNITS.forEach(u => { const s = unitStats(u, exmap); t += s.total; d += s.done; }); return t ? Math.round(d / t * 100) : 0; }
 
 /* ---------- exercise engine ---------- */
@@ -4019,6 +4120,92 @@ EX.dict = {
   }
 };
 
+
+/* ===================== speaking: the microphone (browser speech recognition, free) ===================== */
+const Mic = {
+  SR: window.SpeechRecognition || window.webkitSpeechRecognition,
+  cur: null,
+  ok() { return !!this.SR; },
+  start({ continuous, onText, onEnd, onError }) {
+    this.stop();
+    let r;
+    try { r = new this.SR(); } catch (e) { onError && onError('start'); return false; }
+    r.lang = 'en-US'; r.interimResults = true; r.continuous = !!continuous; r.maxAlternatives = 1;
+    let fin = '';
+    r.onresult = e => { let mid = ''; for (let i = e.resultIndex; i < e.results.length; i++) { const x = e.results[i]; if (x.isFinal) fin += x[0].transcript + ' '; else mid += x[0].transcript; } onText && onText((fin + mid).trim()); };
+    r.onerror = e => { onError && onError(e.error); };
+    r.onend = () => { if (this.cur === r) this.cur = null; onEnd && onEnd(fin.trim()); };
+    try { Voice.stop(); r.start(); this.cur = r; return true; } catch (e) { onError && onError('start'); return false; }
+  },
+  stop() { const r = this.cur; this.cur = null; if (r) { try { r.stop(); } catch (e) {} } }
+};
+const MIC_NA = '🎤 المايك غير مدعوم في هذا المتصفح. افتحي المنصة في Chrome أو Safari.';
+const micErr = c => c === 'not-allowed' ? 'اسمحي للمتصفح باستخدام المايك، ثم جربي مرة ثانية.'
+  : c === 'service-not-allowed' ? 'فعّلي خاصية الإملاء (Dictation) في إعدادات الجوال، أو افتحي المنصة في Chrome، ثم جربي مرة ثانية.'
+  : c === 'no-speech' ? 'ما وصلني صوت. قرّبي الجوال وتكلمي بوضوح.'
+  : c === 'audio-capture' ? 'ما لقيت مايك في الجهاز.'
+  : c === 'network' ? 'خاصية المايك تحتاج اتصال بالإنترنت.'
+  : c === 'aborted' ? '' : 'ما اشتغل المايك. جربي مرة ثانية.';
+function micButton(btn, st, label, opts) {
+  btn.onclick = () => {
+    if (!Mic.ok()) { st.className = 'mst err'; st.textContent = MIC_NA; return; }
+    if (btn.dataset.on === '1') { Mic.stop(); return; }
+    btn.dataset.on = '1'; btn.textContent = '⏹ Stop'; st.className = 'mst'; st.textContent = 'Listening…';
+    const reset = () => { btn.dataset.on = ''; btn.textContent = label; if (st.textContent === 'Listening…') st.textContent = ''; };
+    const ok = Mic.start({ continuous: opts.continuous, onText: opts.onText,
+      onEnd: t => { reset(); opts.onEnd && opts.onEnd(t); },
+      onError: e => { const m = micErr(e); if (m) { st.className = 'mst err'; st.textContent = m; } } });
+    if (!ok) reset();
+  };
+}
+function speakFeedback(box, text, u) {
+  if (!text) { box.innerHTML = ''; return; }
+  const n = text.split(/\s+/).filter(Boolean).length;
+  const g = u ? Object.keys(u.glossAll || u.glossary || {}) : [];
+  const used = g.filter(w => new RegExp('\\b' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i').test(text));
+  const iss = checkWriting(text, { spoken: true });
+  box.innerHTML = `<div class="wchecks"><span class="${n >= 15 ? 'ok' : 'no'}">${n >= 15 ? '✓' : '✗'} ${n} words${n < 15 ? ' · try to say more (15+)' : ''}</span>${used.length ? `<span class="ok">✓ Unit words: ${escHTML(used.slice(0, 4).join(', '))}</span>` : '<span class="no">✗ Try to use a word from this unit</span>'}</div>`
+    + (iss.length ? `<div class="wiss"><b>🔎 ${iss.length} thing${iss.length > 1 ? 's' : ''} to fix</b>${iss.slice(0, 5).map(x => `<div class="wi"><div class="wq">“<s>${escHTML(x.quote)}</s>”</div><div class="ws">→ ${escHTML(x.fix)}</div><div class="we">${escHTML(x.en)}<span class="ar">${escHTML(x.ar)}</span></div></div>`).join('')}</div>` : '<div class="wgood">🌟 Great! No grammar mistakes found.</div>');
+}
+
+/* read aloud: the words she said clearly turn green */
+EX.say = {
+  w: s => String(s || '').toLowerCase().replace(/[’‘]/g, "'").replace(/[^a-z0-9' ]+/g, ' ').split(/\s+/).filter(Boolean),
+  match(target, said) {
+    const bag = {}; EX.say.w(said).forEach(w => { bag[w] = (bag[w] || 0) + 1; });
+    return target.split(/\s+/).map(tok => { const k = EX.say.w(tok).join(''); if (!k) return null; if (bag[k]) { bag[k]--; return true; } return false; });
+  },
+  paint(el, it, said) {
+    const m = EX.say.match(it.s, said);
+    $('.sayt', el).innerHTML = it.s.split(/\s+/).map((tok, i) => m[i] === null ? escHTML(tok) : `<span class="${m[i] ? 'wg' : 'wr'}">${escHTML(tok)}</span>`).join(' ');
+    $('.heard', el).innerHTML = `<span class="hl">You said:</span> ${escHTML(said)}`;
+  },
+  pct(it, said) { const m = EX.say.match(it.s, said).filter(x => x !== null); return m.length ? Math.round(m.filter(Boolean).length / m.length * 100) : 0; },
+  build(box, ex, ans) {
+    ex.items.forEach((it, i) => {
+      const el = h('div', { class: 'it say' }, `<div class="q"><span class="qn">${i + 1}.</span><span class="sayt">${escHTML(it.s)}</span></div><div class="sayb"><button class="tts sl" type="button">🔊 Listen</button><button class="micbtn" type="button">🎤 Read aloud</button><span class="mst"></span></div><div class="heard"></div><div class="fb"></div>`);
+      $('.sl', el).onclick = () => { if (!Voice.say(it.s, { gender: 'f', rate: .9 })) toast('Sound is not available on this device'); };
+      micButton($('.micbtn', el), $('.mst', el), '🎤 Read aloud', {
+        continuous: false,
+        onText: t => { $('.heard', el).innerHTML = `<span class="hl">You said:</span> ${escHTML(t)}`; },
+        onEnd: t => { if (!t) return; ans[i] = t; EX.say.paint(el, it, t); const p = EX.say.pct(it, t); $('.fb', el).textContent = p >= 80 ? `🌟 ${p}% clear` : `${p}% · Listen again and practise the red words.`; }
+      });
+      box.appendChild(el);
+    });
+  },
+  restore(box, ex, ans) { $$('.it', box).forEach((el, i) => { if (ans[i]) EX.say.paint(el, ex.items[i], ans[i]); }); },
+  grade(box, ex, ans) {
+    let c = 0, n = 0;
+    $$('.it', box).forEach((el, i) => {
+      const it = ex.items[i], t = ans[i] || ''; n++;
+      const p = t ? EX.say.pct(it, t) : 0, ok = !!t && p >= 80; if (ok) c++;
+      el.classList.add(ok ? 'ok' : 'bad');
+      $('.fb', el).textContent = !t ? '✗ Not recorded yet' : ok ? `✓ ${p}% · Well done!` : `✗ ${p}% · Listen again and practise the red words.`;
+    });
+    return [c, n];
+  }
+};
+
 EX.type = {
   build(box, ex, ans) {
     ex.items.forEach((it, i) => {
@@ -4159,6 +4346,182 @@ function renderExercise(ex, num) {
   return card;
 }
 
+
+/* ===================== writing: automatic checks (grammar, tense, punctuation) ===================== */
+let WV_ = null;
+const WVg = () => WV_ || (WV_ = (() => {
+  const extra = ['go', 'do', 'have', 'make', 'take', 'get', 'come', 'see', 'know', 'think', 'say', 'tell', 'give', 'find', 'feel', 'leave', 'meet', 'pay', 'buy', 'bring', 'teach', 'learn', 'speak', 'write', 'read', 'run', 'sit', 'stand', 'understand', 'win', 'lose', 'spend', 'send', 'keep', 'begin', 'choose', 'become', 'drive', 'eat', 'drink', 'sleep', 'wake', 'wear',
+    'like', 'love', 'hate', 'want', 'need', 'work', 'study', 'help', 'ask', 'answer', 'call', 'finish', 'start', 'visit', 'watch', 'listen', 'talk', 'walk', 'open', 'play', 'live', 'use', 'decide', 'change', 'arrive', 'close', 'practise', 'practice', 'try', 'carry', 'apply', 'stop', 'plan', 'prefer', 'travel',
+    'enjoy', 'improve', 'develop', 'participate', 'join', 'attend', 'complete', 'create', 'design', 'earn', 'explain', 'follow', 'hope', 'join', 'look', 'move', 'need', 'offer', 'organise', 'organize', 'pass', 'prepare', 'remember', 'share', 'stay', 'support', 'teach', 'train', 'trust', 'agree', 'believe', 'cook', 'clean', 'dream', 'encourage', 'listen', 'manage', 'mentor', 'motivate', 'notice', 'own', 'plan', 'post', 'push', 'reach', 'save', 'solve', 'succeed', 'suggest', 'wish', 'worry'];
+  const irr = {}; IRREG.forEach(r => { irr[r[0]] = { past: r[1].split(' / '), pp: r[2].split(' / ') }; });
+  const base = new Set([...IRREG.map(r => r[0]), ...REGULAR.map(r => r[0]), ...extra]);
+  ['be', 'can', 'must', 'will', 'shall', 'may', 'might', 'could', 'would', 'should'].forEach(x => base.delete(x));
+  const third = w => /(s|sh|ch|x|z|o)$/.test(w) ? w + 'es' : /[^aeiou]y$/.test(w) ? w.slice(0, -1) + 'ies' : w === 'have' ? 'has' : w + 's';
+  const regPast = {}; REGULAR.forEach(r => { regPast[r[0]] = r[1]; });
+  const past = w => irr[w] ? irr[w].past[0] : regPast[w] || (/e$/.test(w) ? w + 'd' : /[^aeiou]y$/.test(w) ? w.slice(0, -1) + 'ied' : w + 'ed');
+  const pp = w => irr[w] ? irr[w].pp[0] : past(w);
+  const T = {}, P = {}, PO = {};   // third → base, past → base, past-only (≠ pp) → base
+  base.forEach(w => { T[third(w)] = w; P[past(w)] = w; if (irr[w]) irr[w].past.forEach(x => { P[x] = w; if (!irr[w].pp.includes(x)) PO[x] = w; }); });
+  const same = new Set(['cut', 'put', 'hit', 'let', 'set', 'hurt', 'cost', 'shut', 'read']);
+  return { base, third, past, pp, T, P, PO, same };
+})());
+const STRONG_ADJ = ['enormous', 'huge', 'tiny', 'brilliant', 'awful', 'terrible', 'disgusting', 'dreadful', 'certain', 'excellent', 'perfect', 'ideal', 'wonderful', 'splendid', 'exhausted', 'furious', 'starving', 'freezing', 'boiling', 'fascinating', 'impossible', 'delighted', 'amazing', 'fantastic', 'essential', 'vital'];
+const NORMAL_ADJ = ['big', 'small', 'clever', 'bad', 'good', 'sure', 'tired', 'angry', 'hungry', 'cold', 'hot', 'interesting', 'difficult', 'important', 'happy', 'sad', 'beautiful', 'nice', 'easy', 'hard', 'busy', 'pleased', 'useful'];
+function checkWriting(text, opts = {}) {
+  const WV = WVg();
+  const out = [], seen = new Set();
+  const add = (quote, fix, en, ar) => { const k = quote.toLowerCase() + '|' + fix; if (seen.has(k)) return; seen.add(k); out.push({ quote, fix, en, ar }); };
+  const t = text.replace(/[’‘]/g, "'").replace(/\s+/g, ' ').trim();
+  if (!t) return out;
+  const sentences = t.split(/(?<=[.!?])\s+/);
+  const PASTW = /\b(yesterday|last (night|week|month|year|summer|semester|term|time)|ago|in (19|20)\d\d|when I was)\b/i;
+  const sentAt = i => { const a = Math.max(t.lastIndexOf('.', i - 1), t.lastIndexOf('!', i - 1), t.lastIndexOf('?', i - 1)) + 1; const e = t.slice(i).search(/[.!?]/); return t.slice(a, e < 0 ? t.length : i + e); };
+  const AUXB = new Set(['does', 'did', "doesn't", "didn't", 'do', "don't", 'can', "can't", 'cannot', 'will', "won't", 'would', 'should', 'must', 'could', 'might', 'may', 'let', 'make', 'help', 'to', 'not', 'that']);
+  const lw = s => s.toLowerCase();
+  // capital I
+  if (!opts.spoken && /(^|[^a-zA-Z'])i(?=[\s',.!?]|$)/.test(t)) add('i', 'I', 'Always write I (me) as a capital letter.', 'الضمير I يُكتب دائمًا حرف كبير.');
+  // sentences: capital letter at the start
+  if (!opts.spoken) sentences.forEach(se => { const m = se.match(/[A-Za-z]/); if (m && m[0] !== m[0].toUpperCase()) add(se.split(' ').slice(0, 3).join(' '), se.replace(/[a-z]/, c => c.toUpperCase()).split(' ').slice(0, 3).join(' '), 'Start every sentence with a capital letter.', 'ابدئي كل جملة بحرف كبير.'); });
+  if (!opts.spoken && !/[.!?]["')]*$/.test(t)) add(t.split(' ').slice(-3).join(' '), t.split(' ').slice(-3).join(' ') + '.', 'End your sentence with a full stop (.)', 'اختمي الجملة بنقطة.');
+  let m;
+  // modal + to
+  const reTo = /\b(can|can't|cannot|could|must|should|will|won't|would|might|may)\s+to\s+(\w+)/gi;
+  while ((m = reTo.exec(t))) add(m[0], `${m[1]} ${m[2]}`, `After ${lw(m[1])}, use the verb without “to”.`, 'بعد الأفعال المساعدة مثل must و can نكتب الفعل مباشرة بدون to.');
+  // modal + verb with -s / -ed / -ing
+  const reMod = /\b(can|can't|cannot|could|must|should|will|won't|would|might|may)\s+(\w+)/gi;
+  while ((m = reMod.exec(t))) {
+    const w = lw(m[2]); let b = null;
+    if (WV.T[w] && !WV.base.has(w)) b = WV.T[w]; else if (WV.P[w] && !WV.base.has(w)) b = WV.P[w]; else if (/ing$/.test(w) && w !== 'bring' && WV.base.has(w.replace(/ing$/, '')) ) b = w.replace(/ing$/, '');
+    if (b) add(m[0], `${m[1]} ${b}`, `After ${lw(m[1])}, use the base verb (no -s, -ed or -ing).`, 'بعد can / must / will … الفعل يكون في أصله بدون s أو ed أو ing.');
+  }
+  // he / she / it (and a singular noun) + base verb
+  const subjRe = /\b(he|she|it|(?:a|the|my|this|every|our|your)\s+(?:good\s+|new\s+)?(?:mentor|teacher|student|friend|mother|father|sister|brother|manager|person|boss|company|colleague|job|tutor))\s+(\w+)/gi;
+  while ((m = subjRe.exec(t))) {
+    const before = t.slice(0, m.index).trim().split(' ').pop(); const w = lw(m[2]);
+    if (AUXB.has(lw(before || ''))) continue;
+    if (PASTW.test(sentAt(m.index)) && !/\b(now|today|these days|every)\b/i.test(sentAt(m.index))) continue;
+    if (WV.base.has(w) && !WV.same.has(w) && w !== 'have' && w !== 'do') add(m[0], `${m[1]} ${WV.third(w)}`, 'With he / she / it, add -s to the verb in the present simple.', 'في المضارع البسيط مع he / she / it نضيف s للفعل.');
+    if (w === 'have') add(m[0], `${m[1]} has`, 'With he / she / it, use has (not have).', 'مع he / she / it نستخدم has.');
+    if (w === 'do') add(m[0], `${m[1]} does`, 'With he / she / it, use does.', 'مع he / she / it نستخدم does.');
+  }
+  // don't / doesn't agreement
+  const reDont = /\b(he|she|it|(?:my|the|a|his|her|our|your)\s+(?:sister|brother|mother|father|friend|teacher|mentor|manager|boss|colleague|company|son|daughter))\s+don't\b/gi; while ((m = reDont.exec(t))) add(m[0], `${m[1]} doesn't`, "With he / she / it, use doesn't.", "مع he / she / it نستخدم doesn't.");
+  const reDoesnt = /\b(I|you|we|they)\s+doesn't\b/gi; while ((m = reDoesnt.exec(t))) add(m[0], `${m[1]} don't`, "With I / you / we / they, use don't.", "مع I / you / we / they نستخدم don't.");
+  const reHas = /\b(I|you|we|they)\s+has\b/gi; while ((m = reHas.exec(t))) add(m[0], `${m[1]} have`, 'With I / you / we / they, use have.', 'مع I / you / we / they نستخدم have.');
+  // be agreement
+  const BE = { i: 'am', you: 'are', we: 'are', they: 'are', he: 'is', she: 'is', it: 'is' };
+  const reBe = /\b(I|you|we|they|he|she|it)\s+(am|is|are)\b/gi;
+  while ((m = reBe.exec(t))) { const want = BE[lw(m[1])]; if (want !== lw(m[2])) add(m[0], `${m[1]} ${want}`, `Use “${m[1]} ${want}”.`, 'انتبهي لتصريف am / is / are مع الضمير.'); }
+  // did / didn't / does / doesn't + past or -s form
+  const reDid = /\b(did|didn't|does|doesn't|do|don't)\s+(not\s+)?(\w+)/gi;
+  while ((m = reDid.exec(t))) {
+    const w = lw(m[3]); const b = (WV.P[w] && !WV.base.has(w)) ? WV.P[w] : (WV.T[w] && !WV.base.has(w)) ? WV.T[w] : null;
+    if (b) add(m[0], `${m[1]} ${m[2] || ''}${b}`, `After ${lw(m[1])}, use the base verb.`, 'بعد did / does / don’t … الفعل يرجع لأصله.');
+  }
+  // have / has + past simple (irregular)
+  const reHave = /\b(have|has|haven't|hasn't|had)\s+(never\s+|already\s+|just\s+|ever\s+)?(\w+)/gi;
+  while ((m = reHave.exec(t))) { const w = lw(m[3]); if (WV.PO[w]) add(m[0], `${m[1]} ${m[2] || ''}${WV.pp(WV.PO[w])}`, `In the present perfect use the past participle: ${WV.PO[w]} → ${WV.past(WV.PO[w])} → ${WV.pp(WV.PO[w])}.`, 'في المضارع التام نستخدم التصريف الثالث للفعل.'); }
+  // am / is / are + base verb (continuous or passive)
+  const reIs = /\b(am|is|are|was|were)\s+(\w+)/gi;
+  while ((m = reIs.exec(t))) { const w = lw(m[2]); if (WV.base.has(w) && !['like', 'open', 'close', 'clean', 'free', 'last', 'cut', 'put', 'set', 'hurt', 'shut', 'read', 'cost', 'let', 'hit', 'own', 'post', 'mentor', 'tutor', 'plan', 'dream', 'study', 'practice', 'change', 'start', 'work', 'help', 'use', 'answer', 'call', 'visit', 'watch', 'talk', 'walk', 'play', 'stop', 'travel', 'support', 'share', 'save', 'cook', 'look', 'move', 'offer', 'pass', 'push', 'reach', 'train', 'trust', 'wish', 'worry', 'hope', 'love', 'want', 'need', 'try'].includes(w)) add(m[0], `${m[1]} ${w}ing / ${m[1]} ${WV.pp(w)}`, `After ${lw(m[1])}, use verb-ing (continuous) or the past participle (passive).`, 'بعد am / is / are نستخدم الفعل + ing أو التصريف الثالث (المبني للمجهول).'); }
+  // past time words + present verb
+  sentences.forEach(se => {
+    if (!/\b(yesterday|last (night|week|month|year|summer|semester|term|time)|ago|in (19|20)\d\d|when I was)\b/i.test(se) || /\b(now|today|these days|every)\b/i.test(se)) return;
+    const reS = /\b(I|you|we|they|he|she)\s+(\w+)/gi; let k;
+    while ((k = reS.exec(se))) {
+      const before = se.slice(0, k.index).trim().split(' ').pop();
+      if (AUXB.has(lw(before || ''))) continue;
+      const w = lw(k[2]); const b = WV.base.has(w) ? w : (WV.T[w] && !WV.base.has(w) ? WV.T[w] : null);
+      if (b && !WV.same.has(b)) add(k[0], `${k[1]} ${WV.past(b)}`, 'This sentence is about the past (yesterday / last … / ago / when I was …). Use the past simple.', 'الجملة عن الماضي، فاستخدمي الماضي البسيط.');
+      if (/^(am|is|are)$/.test(w)) add(k[0], `${k[1]} ${/^(I|he|she)$/i.test(k[1]) ? 'was' : 'were'}`, 'This sentence is about the past. Use was / were.', 'الجملة عن الماضي، فاستخدمي was / were.');
+    }
+  });
+  // conditionals
+  sentences.forEach(se => { const c = se.match(/\bif\b([^,]*?)\b(\w+)\s+will\s+(\w+)/i); if (c && se.indexOf(c[0]) < (se.indexOf(',') < 0 ? se.length : se.indexOf(','))) add(c[0], c[0].replace(/\bwill\s+(\w+)/i, (x, v) => /^(he|she|it)$/i.test(c[2]) && WV.base.has(lw(v)) ? WV.third(lw(v)) : v), 'In the if-clause, use the present simple, not will. (If it rains, I will stay home.)', 'في جملة if لا نستخدم will، نستخدم المضارع البسيط.'); });
+  // comparatives & intensifiers
+  const reMore = /\bmore\s+(better|worse|bigger|smaller|easier|harder|faster|cheaper|older|younger|happier|busier|longer|shorter)\b/gi; while ((m = reMore.exec(t))) add(m[0], m[1], 'Do not use more with -er adjectives.', 'لا نجمع more مع الصفة المنتهية بـ er.');
+  const reVery = new RegExp(`\\b(very|so|a bit)\\s+(${STRONG_ADJ.join('|')})\\b`, 'gi'); while ((m = reVery.exec(t))) add(m[0], `absolutely ${m[2]} / really ${m[2]}`, `“${m[2]}” is a strong adjective. Use absolutely or really, not very.`, 'الصفة القوية لا تأتي مع very، نستخدم absolutely أو really.');
+  const reAbs = new RegExp(`\\b(absolutely|completely|totally)\\s+(${NORMAL_ADJ.join('|')})\\b`, 'gi'); while ((m = reAbs.exec(t))) add(m[0], `very ${m[2]} / really ${m[2]}`, `“${m[2]}” is a normal adjective. Use very or really, not ${lw(m[1])}.`, 'الصفة العادية تأتي مع very أو really، مو absolutely.');
+  // both / either / neither
+  sentences.forEach(se => {
+    if (/\bboth\b/i.test(se) && /\bboth\b[^.]*\bor\b/i.test(se) && !/\bboth\b[^.]*\band\b/i.test(se)) add('both … or', 'both … and', 'We say both … and.', 'نقول both … and.');
+    if (/\beither\b[^.]*\bnor\b/i.test(se)) add('either … nor', 'either … or', 'We say either … or.', 'نقول either … or.');
+    if (/\bneither\b[^.]*\bor\b/i.test(se) && !/\bneither\b[^.]*\bnor\b/i.test(se)) add('neither … or', 'neither … nor', 'We say neither … nor.', 'نقول neither … nor.');
+  });
+  // a / an
+  const reA = /\ba\s+([aeiou]\w*)/gi; while ((m = reA.exec(t))) { if (!/^(uni|use|usu|eu|one|once|u[a-z]?e)/i.test(m[1])) add(m[0], `an ${m[1]}`, 'Use an before a vowel sound (an engineer, an hour).', 'نستخدم an قبل الكلمة اللي تبدأ بصوت حرف علة.'); }
+  const reAn = /\ban\s+([b-df-hj-np-tv-z]\w*)/gi; while ((m = reAn.exec(t))) { if (!/^(hour|honest|hono)/i.test(m[1])) add(m[0], `a ${m[1]}`, 'Use a before a consonant sound (a job, a teacher).', 'نستخدم a قبل الكلمة اللي تبدأ بحرف ساكن.'); }
+  // repeated word
+  const reRep = /\b(\w+)\s+\1\b/gi; while ((m = reRep.exec(t))) { if (!/^(that|had)$/i.test(m[1])) add(m[0], m[1], 'You wrote the same word twice.', 'الكلمة مكررة.'); }
+  return out;
+}
+const WCHK = {
+  can: { re: /\bcan\s+(?!not\b)\w+/i, en: 'Use can + verb', ar: 'استخدمي can + فعل' },
+  cant: { re: /\b(can't|cannot|can not)\s+\w+/i, en: "Use can't + verb", ar: "استخدمي can't + فعل" },
+  past: { test: t => { const WV = WVg(); const ws = t.toLowerCase().replace(/[’']/g, "'").match(/[a-z']+/g) || []; return ws.some(w => (WV.P[w] && !WV.base.has(w)) || ['was', 'were'].includes(w)); }, en: 'Use the past simple', ar: 'استخدمي الماضي البسيط' },
+  perfect: { test: t => { const WV = WVg(); const m = t.toLowerCase().match(/\b(have|has|'ve|'s)\s+(never\s+|already\s+|just\s+|ever\s+)?([a-z]+)/g) || []; return m.some(x => { const w = x.split(/\s+/).pop(); return Object.keys(WV.P).includes(w) || IRREG.some(r => r[2].split(' / ').includes(w)) || w === 'been'; }); }, en: 'Use the present perfect (have / has + past participle)', ar: 'استخدمي المضارع التام' },
+  because: { re: /\bbecause\b/i, en: 'Give a reason with because', ar: 'اذكري السبب بـ because' },
+  intens2: { test: t => (t.match(/\b(absolutely|really|very|extremely|completely|totally|incredibly)\b/gi) || []).length >= 2, en: 'Use at least two intensifiers', ar: 'استخدمي intensifiers مرتين على الأقل' },
+  mentorwords: { test: t => (t.match(/\b(listener|dedicated|curious|engaged|comfort zone|patient|passionate)\b/gi) || []).length >= 2, en: 'Use at least two words from the listening', ar: 'استخدمي كلمتين على الأقل من الاستماع' }
+};
+const WSPEC = {
+  'u1-s1': { p: [
+    { min: 12, need: ['can'], model: 'I can use a computer. I can send emails to my teachers. I can find information on the internet.' },
+    { min: 12, need: ['cant'], model: "I can't speak French. I can't drive a car yet. I can't study late at night because I get tired." }] },
+  'u2-s1': { p: [{ min: 35, need: ['past', 'because'], model: 'a pharmacist. I first knew I wanted this job when I was twelve years old. My mother was sick, and the pharmacist helped her a lot. I want this job because I love science and I want to help people. If I become a pharmacist, I will work in a big hospital.' }] },
+  'u3-l6': { p: [{ min: 20, need: ['mentorwords'], model: 'A good mentor is a good listener. She is dedicated and passionate about her job. She is curious and asks a lot of questions. She is engaged in her students’ learning, and she helps them to leave their comfort zone.' }] },
+  'u4-s1': { p: [{ min: 35, need: ['perfect'], model: 'I have used my laptop for five years. I have studied online with it since 2022. It has changed my life because I have found many useful courses. I have also learned how to make good presentations. I have never had a big problem with it.' }] },
+  'u5-s2': { p: [{ min: 40, need: ['past', 'intens2'], model: 'Last year I decided to study at a technical college. I used the “many features” method. I compared the courses, the fees and the distance from my house. It was a really difficult decision because I liked two colleges. In the end, I chose the college with the best training. Now I am absolutely delighted with my decision.' }] }
+};
+function renderWrite(ex, num) {
+  const spec = WSPEC[ex.id];
+  const card = h('div', { class: 'card en ex', id: 'ex-' + ex.id });
+  const rec = Store.ex[ex.id] || {};
+  const vals = rec.a || [];
+  const needs = [...new Set(spec.p.flatMap(p => p.need || []))];
+  card.innerHTML = `<div class="ex-h"><span class="n">${num}</span><span class="t">${escHTML(ex.title)}</span><span class="st ${rec.c ? 'done' : ''}">${rec.c ? 'Done ✓' : 'Not done'}</span></div>${ex.hint ? `<p class="hint">${ex.hint}</p>` : ''}
+    <div class="wtask"><b>✍️ Your checklist</b><ul><li>At least ${spec.p[0].min} words${spec.p.length > 1 ? ' in each box' : ''}</li>${needs.map(n => `<li>${WCHK[n].en}</li>`).join('')}<li>Capital letters and full stops</li></ul></div>
+    <div class="items"></div>
+    <div class="actions"><button class="btn c wchk" type="button">Check my writing ✓</button><button class="btn ghost wmod hide" type="button">💡 Model answer</button></div>
+    <div class="wnote2">The platform checks grammar, tense and punctuation automatically. Your teacher reads your ideas. · المنصة تصحح القواعد والزمن وعلامات الترقيم تلقائيًا، والأستاذة تقرأ أفكارك.</div>
+    <div class="wmodel hide"></div>`;
+  const box = $('.items', card);
+  spec.p.forEach((ps, i) => {
+    const p = ex.prompts[i] || {};
+    const el = h('div', { class: 'it' }, `<div class="q">${p.q ? `<span class="qn">${i + 1}.</span>${escHTML(p.q)}` : ''}</div>${p.pre ? `<div style="white-space:pre-wrap;color:#4B5260;margin-bottom:6px">${escHTML(p.pre)}</div>` : ''}<textarea class="open" spellcheck="false" placeholder="${escHTML(p.ph || 'Write your answer in English…')}"></textarea><div class="wc">0 words</div>${p.post ? `<div style="white-space:pre-wrap;color:#4B5260;margin-top:6px">${escHTML(p.post)}</div>` : ''}<div class="wfbk"></div>`);
+    const ta = $('textarea', el); ta.value = vals[i] || '';
+    const wc = () => { $('.wc', el).textContent = (ta.value.trim() ? ta.value.trim().split(/\s+/).length : 0) + ' words'; };
+    ta.oninput = wc; wc();
+    box.appendChild(el);
+  });
+  const run = (save) => {
+    const texts = $$('textarea', card).map(t => t.value.trim());
+    if (save && !texts.some(x => x.split(/\s+/).filter(Boolean).length >= 3)) { toast('Write at least three words'); return; }
+    let allOk = true;
+    $$('.it', box).forEach((el, i) => {
+      const ps = spec.p[i], txt = texts[i] || '', n = txt ? txt.split(/\s+/).length : 0;
+      const fb = $('.wfbk', el); if (!txt) { fb.innerHTML = ''; allOk = false; return; }
+      const checks = [{ ok: n >= ps.min, en: `${n} / ${ps.min} words` }].concat((ps.need || []).map(k => { const c = WCHK[k]; return { ok: c.test ? c.test(txt) : c.re.test(txt), en: c.en, ar: c.ar }; }));
+      const iss = checkWriting(txt);
+      if (n < ps.min) allOk = false;
+      fb.innerHTML = `<div class="wchecks">${checks.map(c => `<span class="${c.ok ? 'ok' : 'no'}">${c.ok ? '✓' : '✗'} ${escHTML(c.en)}</span>`).join('')}</div>`
+        + (iss.length ? `<div class="wiss"><b>🔎 ${iss.length} thing${iss.length > 1 ? 's' : ''} to fix</b>${iss.slice(0, 8).map(x => `<div class="wi"><div class="wq">“<s>${escHTML(x.quote)}</s>”</div><div class="ws">→ ${escHTML(x.fix)}</div><div class="we">${escHTML(x.en)}<span class="ar">${escHTML(x.ar)}</span></div></div>`).join('')}</div>`
+          : `<div class="wgood">🌟 No mistakes found in grammar, tense and punctuation.</div>`);
+    });
+    if (save) {
+      const done = allOk;
+      Store.setEx(ex.id, { c: done, b: null, a: texts });
+      const st = $('.st', card); st.className = 'st' + (done ? ' done' : ''); st.textContent = done ? 'Done ✓' : 'Partly done';
+      Track.sendWriting(ex.title, texts.filter(Boolean).join(' || '));
+    }
+    $('.wmod', card).classList.remove('hide');
+  };
+  $('.wchk', card).onclick = () => run(true);
+  $('.wmod', card).onclick = () => { const m = $('.wmodel', card); m.innerHTML = `<b>💡 Model answer</b>${spec.p.map((p, i) => `<p style="margin:6px 0 0">${spec.p.length > 1 ? `<b>${i + 1}.</b> ` : ''}${escHTML(p.model)}</p>`).join('')}<p class="hint" style="margin:8px 0 0">Compare it with your answer. Don't copy it. Use your own ideas.</p>`; m.classList.toggle('hide'); };
+  if (vals.some(Boolean)) run(false);
+  return card;
+}
+
 /* open answers (speaking / writing) */
 function renderOpen(ex, num) {
   const card = h('div', { class: 'card en ex', id: 'ex-' + ex.id });
@@ -4171,6 +4534,19 @@ function renderOpen(ex, num) {
     const ta = $('textarea', el); ta.value = vals[i] || '';
     const wc = () => { $('.wc', el).textContent = (ta.value.trim() ? ta.value.trim().split(/\s+/).length : 0) + ' words'; };
     ta.oninput = wc; wc();
+    if (ex.speak) {
+      const row = h('div', { class: 'sayb' }, '<button class="micbtn" type="button">🎤 Speak</button><span class="mst"></span>');
+      const fb = h('div', { class: 'spfb' });
+      el.insertBefore(row, ta); el.appendChild(fb);
+      const meta = exMeta(ex.id), u = meta && meta.u;
+      let base = '';
+      micButton($('.micbtn', row), $('.mst', row), '🎤 Speak', {
+        continuous: true,
+        onText: t => { if (!row.dataset.rec) { row.dataset.rec = 1; base = ta.value.trim(); } ta.value = (base ? base + ' ' : '') + t; wc(); },
+        onEnd: () => { row.dataset.rec = ''; speakFeedback(fb, ta.value.trim(), u); }
+      });
+      if (ta.value.trim()) speakFeedback(fb, ta.value.trim(), u);
+    }
     box.appendChild(el);
   });
   $('.btn', card).onclick = () => {
@@ -4182,7 +4558,7 @@ function renderOpen(ex, num) {
     const st = $('.st', card); st.className = 'st' + (filled === a.length ? ' done' : ''); st.textContent = filled === a.length ? 'Done ✓' : 'Partly done';
   };
   if (ex.speak) {
-    const tip = h('p', { class: 'hint' }, '🎙️ Practise saying your answer out loud before you write it.');
+    const tip = h('p', { class: 'hint' }, '🎤 Tap Speak and answer out loud. Your words appear in the box. Fix them if you need to, then tap Save.<span class="arh">اضغطي 🎤 Speak وجاوبي بصوتك: كلامك ينكتب في الخانة، وتطلع لك ملاحظات على القواعد وكلمات الوحدة. وتقدرين تكتبين جوابك بدل التسجيل.</span>');
     card.insertBefore(tip, box);
   }
   return card;
@@ -4285,7 +4661,7 @@ function readAloud(btn, el) {
 let players = [];
 function renderBlock(b, u, num) {
   switch (b.t) {
-    case 'ex': return b.k === 'open' ? renderOpen(b, num) : b.k === 'cando' ? renderCando(b) : b.k === 'builder' ? renderBuilder(b, num) : renderExercise(b, num);
+    case 'ex': return b.k === 'open' ? (typeof WSPEC !== 'undefined' && WSPEC[b.id] ? renderWrite(b, num) : renderOpen(b, num)) : b.k === 'cando' ? renderCando(b) : b.k === 'builder' ? renderBuilder(b, num) : renderExercise(b, num);
     case 'text': { const c = h('div', { class: 'card' + (b.en ? ' en' : '') }, b.html); return c; }
     case 'reading': {
       const c = h('div', { class: 'card reading' });
@@ -4304,6 +4680,8 @@ function renderBlock(b, u, num) {
     }
     case 'audio': {
       const c = h('div', { class: 'card' });
+      const vsrc = (typeof LVIDEO !== 'undefined' ? LVIDEO : {})[b.key];
+      if (vsrc) { c.innerHTML = `<div class="lvid"><div class="lvh"><span class="ai">🎧</span><b>${escHTML(b.label || 'Listening')}</b></div><video controls playsinline preload="metadata" src="${vsrc}#t=0.1"></video><div class="hint" style="margin:8px 2px 0">Watch and listen, then answer the questions.</div></div>`; return c; }
       const src = (typeof AUDIO !== 'undefined' ? AUDIO : {})[b.key] || ('audio/listening/' + b.key + '.mp3');
       const wait = `<b>${escHTML(b.label || 'Listening track')}</b><div style="color:var(--muted);font-size:14px">The audio will be added soon. You can read the questions now.</div>`;
       c.innerHTML = `<div class="audio"><div class="ai">🎧</div><div style="flex:1" class="aw"><b>${escHTML(b.label || 'Listening')}</b><audio controls preload="metadata" src="${src}"></audio></div></div>`;
@@ -4338,7 +4716,7 @@ function renderBlock(b, u, num) {
     }
     case 'grammar': return renderGrammar(b, u);
     case 'transcript': {
-      const x = XLISTEN[b.key]; if (!x) return h('div');
+      const x = b.x || XLISTEN[b.key]; if (!x) return h('div');
       const c = h('details', { class: 'card info', style: 'padding:0' }, `<summary>📄 Transcript (read after you answer)</summary><div class="in">${x.lines.map(l => `<p style="margin:0 0 8px"><b>${escHTML(x.cast[l.k].name)}:</b> ${escHTML(l.t)}</p>`).join('')}</div>`);
       return c;
     }
@@ -4374,7 +4752,7 @@ function setTheme(u) {
   const r = document.documentElement.style;
   r.setProperty('--c', u ? u.color : '#0E9F8E'); r.setProperty('--c2', u ? u.color2 : '#0B7F72'); r.setProperty('--ct', u ? u.tint : '#E5F6F3');
 }
-function cleanup() { players.forEach(p => p.destroy()); players = []; Voice.stop(); }
+function cleanup() { players.forEach(p => p.destroy()); players = []; Voice.stop(); if (typeof Mic !== 'undefined') Mic.stop(); }
 const shortName = t => t.replace(/^Modal verb: /, '').replace(/ \(review\)$/, '').replace(/^Future: .*/, 'Future tense').replace(/^The passive voice$/, 'Passive voice').replace(/ with strong adjectives$/, '').replace(/^Conditional sentences: /, 'Conditionals ');
 /* ----- one thing at a time: a section is split into pages with Back / Next ----- */
 function grammarPages(g, u) {
@@ -4491,7 +4869,7 @@ function viewHome() {
     <div class="ugroups"></div>
     <div class="endcards">
     ${COURSE.questUrl ? `<div class="qcard"><div class="ic">🔐</div><div style="flex:1;min-width:0"><b>English 3 Quest</b><div class="sub">The Locked College · a game with English challenges</div></div><a class="play" href="${COURSE.questUrl}" target="_blank" rel="noopener">▶ Play</a></div>` : ''}
-    ${Store.mem.surveyDone ? '' : `<a class="svcard" href="#survey"><span class="ic">⭐</span><div style="flex:1;min-width:0"><b>رأيك يهمّنا</b><div>خذي ٣ دقائق وقيّمي المنصة: هل تفيدك؟ وش نحسّن؟</div></div><span class="go">‹</span></a>`}
+    ${Store.mem.surveyDone || !COURSE.surveyUrl ? '' : `<a class="svcard" href="#survey"><span class="ic">⭐</span><div style="flex:1;min-width:0"><b>رأيك يهمّنا</b><div>خذي ٣ دقائق وقيّمي المنصة: هل تفيدك؟ وش نحسّن؟</div></div><span class="go">‹</span></a>`}
     </div>
     ${Track.on() ? `<div class="autonote">✅ Your progress is saved and sent to your teacher automatically.</div>` : `    <div class="sect-t"><h2>My report</h2></div>
     <div class="card"><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:200px"><b>Send your progress to your teacher</b><div class="hint" style="margin:2px 0 0">Copy your report and send it on Teams or by email.</div></div><button class="btn c" id="repbtn" type="button">📤 My report</button></div></div>`}
@@ -5336,7 +5714,7 @@ function viewDaily() {
 
 /* ---------- study plan before the next exam ---------- */
 const PLAN_FOCUS = { mid: ['grammar', 'vocab', 'practice'], lr: ['reading', 'listening', 'practice'], quiz: ['practice', 'grammar', 'vocab'] };
-const PLAN_AR = { grammar: 'القواعد', vocab: 'المفردات', practice: 'التمارين', reading: 'القراءة', listening: 'الاستماع' };
+const PLAN_AR = { grammar: 'القواعد', vocab: 'المفردات', practice: 'التمارين', reading: 'القراءة', listening: 'الاستماع', writing: 'الكتابة' };
 const planFocus = e => e.focus || PLAN_FOCUS[e.kind] || PLAN_FOCUS.mid;
 const planDesc = e => { const f = planFocus(e).map(k => PLAN_AR[k]); return f.length === 1 ? `${f[0]} فقط` : 'تركيز على ' + f.slice(0, -1).join(' و') + ' و' + f[f.length - 1]; };
 function unitsText(e) {
@@ -5415,11 +5793,13 @@ const TOUR = [
   { h: 'أهلًا {name} 👋', p: 'هذي جولة سريعة (أقل من دقيقة) تعرّفك على المنصة. تقدرين تتخطينها، وترجعين لها متى ما بغيتي من «❓ جولة تعريفية» تحت الجدول.' },
   { t: () => $('#homebtn'), h: '🏠 الرئيسية', p: 'يرجعك لهذي الصفحة من أي مكان في المنصة.' },
   { t: () => $('#bdbtn'), h: '📅 الجدول والإعلانات', p: 'مواعيد اختباراتك وإعلانات الأستاذة وتقويم الفصل كامل. وفيه خطة مذاكرة لين اختبارك القادم.' },
+  { t: () => $('#main .bd-home'), h: '📋 خطة المذاكرة', p: 'افتحي «الجدول والإعلانات» واختاري شعبتك، وتطلع لك خطة مذاكرة يوم بيوم لين اختبارك القادم، فيها الأجزاء اللي باقية عليك بس. كل مهمة تنشطب ✓ لما تخلّصين تمارينها بدرجة ٧٠٪ أو أكثر، واللي تفوتك تنتقل لليوم اللي بعده، وآخر يوم للمراجعة والاختبار التجريبي.' },
   { t: () => $('#svbtn'), h: '⭐ قيّمي المنصة', p: 'رأيك يساعدنا نطوّر المنصة ونخليها أفيد لك.' },
   { t: () => $('#who'), h: 'اسمك وإنجازك', p: 'هنا نسبة إنجازك في المقرر كامل. اضغطي عليه لو تبين تعدّلين اسمك أو رقمك.' },
   { t: () => $('#main .dhome'), h: '🔥 Daily Challenge', p: '٥ أسئلة سريعة كل يوم. حلّيها يوميًا عشان تكبر سلسلتك 🔥 ولا تنقطع.' },
   { t: () => $('#main .ugroups details.ugroup > summary'), h: '📚 الوحدات', p: 'كل وحدة مقسومة Part 1 و Part 2. اضغطي على اسم الوحدة عشان تفتح أو تنطوي.' },
   { t: () => { let c = $('#main .ugroups details[open] .ucard'); if (!c) { const d = $('#main .ugroups details.ugroup'); if (d) { d.open = true; c = $('.ucard', d); } } return c; }, h: 'داخل كل جزء', p: 'أقسام بالترتيب: المقدمة، المفردات، القواعد، القراءة… وتتنقلين بينها بـ Next و Back. وفي 🎯 Practice اختبار قصير وإملاء، ولو غلطتي يطلع لك 💡 ⁦Why?⁩ يشرح لك السبب.' },
+  { t: () => $('#main .ugroups details[open] .ucard') || $('#main .ugroups .ucard'), h: '🎤 Speaking: سجّلي صوتك', p: 'في قسم Speaking تجاوبين بصوتك بزر 🎤، وكلامك ينكتب لك. وفي تمرين النطق تقرئين الجملة بصوتك: الكلمة اللي نطقتيها صح تطلع خضراء، والغلط حمراء. وأول مرة اسمحي للمتصفح باستخدام المايك.' },
   { t: () => $('#main a.urow[href="#rev"]'), h: '🔁 المراجعة الشاملة', p: 'كل القواعد والمفردات والعبارات في مكان واحد، مع تمارين مختلطة قبل الاختبار النهائي.' },
   { t: () => $('#main a.urow[href="#mock"]'), h: '📝 Mock Test', p: '٢٠ سؤال عشوائي، وكل محاولة أسئلة جديدة. وفي الآخر تشوفين درجتك وشرح أخطائك.' },
   { t: () => $('#main a.urow[href="#words"]'), h: '📒 My Words', p: 'أي كلمة تغلطين فيها تنحفظ هنا تلقائيًا، وتراجعينها ببطاقات لين تحفظينها.' },
@@ -5515,6 +5895,14 @@ const Track = {
     const wc = wordsCount(); if (wc) extra.push(`Words to review: ${wc}`);
     return parts.join(' | ') + (extra.length ? ' || ' + extra.join(' · ') : '');
   },
+  sendWriting(title, text) {
+    const c = this.parse(), st = Store.mem.student;
+    if (!c || !c.f.writing || !st || Store.mem.role === 'teacher') return;
+    const v = { name: st.name, sid: st.sid, sec: st.sec || '', pct: overall() + '%', detail: this.detail(), writing: `${title}: ${text}` };
+    const body = new URLSearchParams(); Object.entries(c.f).forEach(([k, e]) => { if (v[k] !== undefined) body.append(e, v[k]); });
+    try { if (!(navigator.sendBeacon && navigator.sendBeacon(c.url, body))) fetch(c.url, { method: 'POST', mode: 'no-cors', body, keepalive: true }).catch(() => {}); } catch (e) {}
+    Store.mem.trackDirty = false; Store.save();
+  },
   flush(force) {
     clearTimeout(this.tm);
     const c = this.parse(), st = Store.mem.student;
@@ -5593,7 +5981,7 @@ function boot() {
       <a id="tbtn" class="btn ghost sm hide" href="#teacher" style="text-decoration:none">Teacher</a>
       <button class="chip" id="who" type="button"></button></div></header>
     <main id="main"></main>
-    <footer class="foot">English 3 · ${COURSE.teacher}<br><a href="#teacher">Teacher dashboard</a></footer>`;
+    <footer class="foot">English 3 · ${COURSE.teacher}${Track.on() ? '' : '<br><a href="#teacher">Teacher dashboard</a>'}</footer>`;
   $('#who').onclick = () => askStudent(!!Store.mem.student);
   refreshTop();
   window.addEventListener('hashchange', route);

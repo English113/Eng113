@@ -1,12 +1,10 @@
 ملفات الاستماع (Listening) — English 3
 ==========================================
-ارفعي ملفات الاستماع في هذا المجلد (audio/listening) بالأسماء التالية بالضبط،
-والمنصة تشغّلها تلقائيًا في مكانها:
+u2-lw.mp4   Unit 2 · Part 1 · Problems at work (Amal and Hannah)
+u2-l1.mp4   Unit 2 · Part 2 · Dream jobs
+u3-l1.mp4   Unit 3 · Part 1 · Nadine, Judy and Razan
+u3-l2.mp4   Unit 3 · Part 2 · Five rules of being a successful mentor
+u5-l1.mp4   Unit 5 · Part 1 · Five important decisions
+u5-l2.mp4   Unit 5 · Part 2 · Ronan and Jo
 
-u2-l1.mp3   Unit 2 · Listening: Dream jobs
-u3-l1.mp3   Unit 3 · Listening 1: Nadine, Judy and Razan
-u3-l2.mp3   Unit 3 · Listening 2: Five rules of being a successful mentor
-u5-l1.mp3   Unit 5 · Listening 1: Five important decisions
-u5-l2.mp3   Unit 5 · Listening 2: Ronan and Jo
-
-لو الملف ناقص، المنصة تكتب للطالبة: "The audio will be added soon".
+لاستبدال أي فيديو: ارفعي الملف الجديد بنفس الاسم في هذا المجلد.
