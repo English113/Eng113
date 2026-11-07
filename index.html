@@ -4380,7 +4380,7 @@ function checkWriting(text, opts = {}) {
   const add = (quote, fix, en, ar) => { const k = quote.toLowerCase() + '|' + fix; if (seen.has(k)) return; seen.add(k); out.push({ quote, fix, en, ar }); };
   const t = text.replace(/[’‘]/g, "'").replace(/\s+/g, ' ').trim();
   if (!t) return out;
-  const sentences = t.split(/(?<=[.!?])\s+/);
+  const sentences = t.replace(/([.!?])\s+/g, '$1\u0001').split('\u0001');
   const PASTW = /\b(yesterday|last (night|week|month|year|summer|semester|term|time)|ago|in (19|20)\d\d|when I was)\b/i;
   const sentAt = i => { const a = Math.max(t.lastIndexOf('.', i - 1), t.lastIndexOf('!', i - 1), t.lastIndexOf('?', i - 1)) + 1; const e = t.slice(i).search(/[.!?]/); return t.slice(a, e < 0 ? t.length : i + e); };
   const AUXB = new Set(['does', 'did', "doesn't", "didn't", 'do', "don't", 'can', "can't", 'cannot', 'will', "won't", 'would', 'should', 'must', 'could', 'might', 'may', 'let', 'make', 'help', 'to', 'not', 'that']);
