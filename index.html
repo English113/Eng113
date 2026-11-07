@@ -576,6 +576,7 @@ textarea.open{width:100%;min-height:120px;border:1.5px solid var(--line);border-
 .mypin b.pn{letter-spacing:.25em;font-size:17px}
 .srow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .srow input,.srow select{flex:1;min-width:150px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit}
+.tmore{color:var(--muted);font-size:12px;font-weight:600;margin-inline-start:6px}
 .wlist .wi{background:#F7F9FB;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px;white-space:pre-wrap}
 .wlist .wd{font-size:12px;color:var(--muted);margin-bottom:4px}
 .autonote{margin:22px 0 0;background:var(--okbg);border:1px solid #B9E5CF;color:#0E6B45;border-radius:14px;padding:10px 14px;font-weight:800;font-size:14.5px;text-align:center}
@@ -5142,33 +5143,41 @@ function askPin(reason) {
   document.body.appendChild(m);
   setTimeout(() => { const i = $('input[name=pin]', m); if (i) i.focus(); }, 50);
 }
-// teacher panel: the students' saved progress by section (needs the teacher password)
-function teacherCloud(w) {
+// teacher panel: students' saved progress from the sheet (needs the teacher password)
+function sheetEntry(x) {
+  let d = {}; try { d = JSON.parse(x.data || '{}') || {}; } catch (e) { d = {}; }
+  const raw = d.ex || {}, ex = exPayload(raw);
+  Object.keys(ex).forEach(id => { const r = raw[id] || {}; if (typeof r.last === 'number') ex[id].ls = r.last; if (r.t) ex[id].tm = r.t; });
+  return { n: x.name || '', i: x.sid, s: x.sec || '', t: Date.parse(x.updated) || 0, ex, src: 'sheet', mh: Array.isArray(d.mockHist) ? d.mockHist : [], days: d.daily && d.daily.days ? Object.keys(d.daily.days).length : 0 };
+}
+const shortDate = t => new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+function sheetSummary(r) {
+  let s = `<p class="hint" style="margin:6px 0 10px">Last update: ${r.t ? escHTML(new Date(r.t).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })) : '—'} · Daily challenge: ${r.days} day${r.days === 1 ? '' : 's'}</p>`;
+  s += `<h4>Mock tests — ${r.mh.length ? r.mh.length + (r.mh.length === 1 ? ' try' : ' tries') : 'not tried yet'}</h4>`;
+  r.mh.slice().reverse().forEach(m => { s += `<div class="row"><span>📝 ${escHTML(shortDate(m.d))}</span><span><b>${Number(m.s) || 0}%</b></span></div>`; });
+  return s;
+}
+function teacherCloud(w, onList) {
   const box = $('#cloudT', w); if (!box) return;
-  if (!Sync.on()) { box.innerHTML = '<div class="card"><b>Students’ saved progress</b><p class="hint" style="margin-top:4px">Not connected yet. Paste the Apps Script web app link into COURSE.syncUrl, then reload the page.</p></div>'; return; }
   box.innerHTML = `<div class="card"><b>Students’ saved progress</b>
-    <p class="hint" style="margin-top:4px">Enter your teacher password, choose a section, then press Show.</p>
+    <p class="hint" style="margin-top:4px">Enter your teacher password, choose a section, then press Show. Tap a student in the table to see every task, her score and her last try.</p>
     <div class="srow"><input id="tkey" type="password" placeholder="Teacher password" autocomplete="off"><select id="tsec"><option value="">All sections</option></select><button class="btn c" id="tgo" type="button">Show</button></div>
-    <div class="fmsg" id="tmsg"></div><div id="tlist"></div></div>`;
+    <div class="fmsg" id="tmsg" style="direction:ltr;text-align:left"></div></div>`;
   let data = null;
   const fmt = v => { const t = Date.parse(v); return isNaN(t) ? String(v || '') : new Date(t).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }); };
   const draw = () => {
     const sec = $('#tsec', box).value;
-    const list = data.students.filter(x => !sec || x.sec === sec).sort((a, b) => String(a.name).localeCompare(String(b.name)));
-    const rows = list.map(x => {
-      let ex = {}; try { ex = JSON.parse(x.data || '{}').ex || {}; } catch (e) {}
-      const done = Object.values(ex).filter(v => v && v.c).length;
-      return `<tr><td>${escHTML(x.name || '—')}</td><td>${escHTML(x.sid)}</td><td>${escHTML(x.sec || '—')}</td><td>${escHTML(x.pct || '')}</td><td>${done}</td><td>${escHTML(fmt(x.updated))}</td></tr>`;
-    }).join('');
-    const ws = data.writings.filter(wr => list.some(x => x.sid === wr.sid)).reverse();
-    const wh = ws.length ? ws.map(wr => { const who = list.find(x => x.sid === wr.sid); return `<div class="wi"><div class="wd">${escHTML(fmt(wr.time))} · ${escHTML((who && who.name) || wr.sid)}</div>${escHTML(wr.text)}</div>`; }).join('') : '<p class="hint">No writing sent yet.</p>';
-    $('#tlist', box).innerHTML = list.length
-      ? `<div class="tscroll"><table class="roster"><thead><tr><th>Name</th><th>ID</th><th>Section</th><th>Progress</th><th>Tasks done</th><th>Last update</th></tr></thead><tbody>${rows}</tbody></table></div><div class="sect-t"><h2>Writing</h2></div><div class="wlist">${wh}</div>`
-      : '<p class="hint" style="margin-top:10px">No students in this section yet.</p>';
+    const list = data.students.filter(x => !sec || x.sec === sec).map(sheetEntry);
+    onList(list);
+    const ids = {}; list.forEach(x => { ids[x.i] = x.n || x.i; });
+    const ws = data.writings.filter(wr => ids[wr.sid] !== undefined).reverse();
+    const tw = $('#twrite', w);
+    if (tw) tw.innerHTML = `<div class="sect-t"><h2>Writing</h2></div><div class="wlist">${ws.length ? ws.map(wr => `<div class="wi"><div class="wd">${escHTML(fmt(wr.time))} · ${escHTML(ids[wr.sid])}</div>${escHTML(wr.text)}</div>`).join('') : '<p class="hint">No writing sent yet.</p>'}</div>`;
+    return list.length;
   };
   const fillSecs = () => {
     const sel = $('#tsec', box), cur = sel.value;
-    sel.innerHTML = '<option value="">All sections</option>' + data.sections.map(s => `<option value="${escHTML(s)}">${escHTML(s)}</option>`).join('');
+    sel.innerHTML = '<option value="">All sections</option>' + data.sections.map(x => `<option value="${escHTML(x)}">${escHTML(x)}</option>`).join('');
     sel.value = cur;
   };
   const go = async () => {
@@ -5176,39 +5185,46 @@ function teacherCloud(w) {
     if (!key) { msg.className = 'fmsg err'; msg.textContent = 'Enter the teacher password'; return; }
     msg.className = 'fmsg'; msg.textContent = 'Loading…';
     const r = await Sync.call({ action: 'roster', key });
-    if (!r.ok) { msg.className = 'fmsg err'; msg.textContent = r.error === 'wrong-key' ? 'Wrong password' : 'Could not load (' + (r.error || 'error') + ')'; return; }
-    data = r; fillSecs(); draw();
-    msg.className = 'fmsg ok'; msg.textContent = r.students.length + ' students loaded ✓';
+    if (!r.ok) {
+      msg.className = 'fmsg err'; msg.textContent = r.error === 'wrong-key' ? 'Wrong password' : 'Could not load (' + (r.error || 'error') + ')';
+      if (r.error === 'wrong-key') try { sessionStorage.removeItem('e3tkey'); } catch (e) {}
+      return;
+    }
+    try { sessionStorage.setItem('e3tkey', key); } catch (e) {}
+    data = r; fillSecs(); const n = draw();
+    msg.className = 'fmsg ok'; msg.textContent = `✓ ${n} student${n === 1 ? '' : 's'} loaded`;
   };
   $('#tgo', box).onclick = go;
   $('#tkey', box).onkeydown = e => { if (e.key === 'Enter') go(); };
-  $('#tsec', box).onchange = () => { if (data) draw(); };
+  $('#tsec', box).onchange = () => { if (data) { const n = draw(); $('#tmsg', box).textContent = `✓ ${n} student${n === 1 ? '' : 's'}`; } };
+  try { const k = sessionStorage.getItem('e3tkey'); if (k) { $('#tkey', box).value = k; go(); } } catch (e) {}
 }
 
 /* ---------- teacher dashboard ---------- */
 async function viewTeacher() {
   setTheme(null);
+  const sheet = Sync.on();
   const main = $('#main'); main.innerHTML = '';
   const w = h('div', { class: 'wrap' });
   w.innerHTML = `
-    <div class="hero" style="background:linear-gradient(135deg,#1E2330,#3B3A8F)"><div class="row"><div class="txt"><div style="font-weight:800;opacity:.85;font-size:14px">Teacher dashboard</div><h1>Student progress</h1><p>Paste your students’ reports here — one message or many at once — and they’re added to the table.</p></div></div></div>
-    ${Cloud.db ? '<div class="banner-note" style="background:#E6F6EE;border-color:#9ED9BE;color:#0E6B45">☁️ The table is saved in your Claude account, so you can see it on any device.</div>' : '<div class="banner-note">💾 The table is saved on this device. Open the page signed in to your Claude account to save it in your account.</div>'}
+    <div class="hero" style="background:linear-gradient(135deg,#1E2330,#3B3A8F)"><div class="row"><div class="txt"><div style="font-weight:800;opacity:.85;font-size:14px">Teacher dashboard</div><h1>Student progress</h1><p>${sheet ? 'Your students’ progress is saved automatically. Enter your password, pick a section, and tap a student to see every task.' : 'Paste your students’ reports here — one message or many at once — and they’re added to the table.'}</p></div></div></div>
+    ${sheet ? '' : Cloud.db ? '<div class="banner-note" style="background:#E6F6EE;border-color:#9ED9BE;color:#0E6B45">☁️ The table is saved in your Claude account, so you can see it on any device.</div>' : '<div class="banner-note">💾 The table is saved on this device. Open the page signed in to your Claude account to save it in your account.</div>'}
     <div id="cloudT"></div>
-    <div class="card"><b>Add reports</b><p class="hint" style="margin-top:4px">Copy the students’ messages from Teams or email and paste them here. You can paste several at once.</p>
+    ${sheet ? '' : `<div class="card"><b>Add reports</b><p class="hint" style="margin-top:4px">Copy the students’ messages from Teams or email and paste them here. You can paste several at once.</p>
       <textarea class="repbox" id="paste" placeholder="Paste reports here…" style="min-height:110px"></textarea>
-      <div class="actions"><button class="btn c" id="imp" type="button">Add to table</button><span id="impmsg" class="saved"></span></div></div>
+      <div class="actions"><button class="btn c" id="imp" type="button">Add to table</button><span id="impmsg" class="saved"></span></div></div>`}
     <div class="tcards" id="tcards"></div>
     <div class="sect-t"><h2>Students</h2><span><button class="btn ghost sm" id="csv" type="button">Copy table (CSV)</button></span></div>
     <div class="tscroll"><table class="roster"><thead><tr><th>Name</th><th>ID</th>${UNITS.map(u => `<th>${u.short}</th>`).join('')}<th>Avg</th><th>Updated</th></tr></thead><tbody id="rbody"><tr><td colspan="${UNITS.length + 4}" style="text-align:center;color:var(--muted)">Loading…</td></tr></tbody></table></div>
     <div id="detail"></div>
-    <div class="card"><b>Try it</b><p class="hint" style="margin-top:4px">Add a sample report from your own progress on this device to see how the table looks.</p><button class="btn ghost sm" id="selftest" type="button">Add sample report</button></div>`;
+    <div id="twrite"></div>
+    ${sheet ? '' : `<div class="card"><b>Try it</b><p class="hint" style="margin-top:4px">Add a sample report from your own progress on this device to see how the table looks.</p><button class="btn ghost sm" id="selftest" type="button">Add sample report</button></div>`}`;
   main.appendChild(w);
-  teacherCloud(w);
-  let roster = await Cloud.loadRoster();
+  let roster = sheet ? {} : await Cloud.loadRoster();
   const draw = () => {
     const keys = Object.keys(roster).sort((a, b) => (roster[a].n || '').localeCompare(roster[b].n || ''));
     const body = $('#rbody'); body.innerHTML = '';
-    if (!keys.length) body.innerHTML = '<tr><td colspan="' + (UNITS.length + 4) + '" style="text-align:center;color:var(--muted);padding:24px">No reports yet. Ask your students to tap “My report” on the home page and send you the message.</td></tr>';
+    if (!keys.length) body.innerHTML = '<tr><td colspan="' + (UNITS.length + 4) + '" style="text-align:center;color:var(--muted);padding:24px">' + (sheet ? 'No students to show yet. Enter your password above and press Show.' : 'No reports yet. Ask your students to tap “My report” on the home page and send you the message.') + '</td></tr>';
     let sumPct = 0, sumAvg = 0, nAvg = 0;
     keys.forEach(k => {
       const r = roster[k];
@@ -5226,25 +5242,28 @@ async function viewTeacher() {
   };
   const showDetail = (k, r) => {
     const d = $('#detail');
-    let html = `<div class="card det"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h3 style="margin:0"><span dir="auto">${escHTML(r.n)}</span> <span style="color:var(--muted);font-size:14px">${escHTML(r.i)}</span></h3><button class="btn ghost sm" id="del" type="button">Delete</button></div>`;
+    let html = `<div class="card det"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h3 style="margin:0"><span dir="auto">${escHTML(r.n)}</span> <span style="color:var(--muted);font-size:14px">${escHTML(r.i)}</span></h3>${r.src === 'sheet' ? '' : '<button class="btn ghost sm" id="del" type="button">Delete</button>'}</div>`;
+    if (r.src === 'sheet') html += sheetSummary(r);
     UNITS.forEach(u => {
       const s = unitStats(u, r.ex || {});
       html += `<h4 style="color:${u.color}">${u.label}: ${u.title} — ${s.pct}%</h4>`;
       u.sections.forEach(sc => flat(sc).forEach(b => {
         const e = (r.ex || {})[b.id];
         const label = b.title || (b.t === 'video' ? 'Story video' : b.k === 'cando' ? 'I can…' : b.id);
+        const more = e && r.src === 'sheet' ? (typeof e.ls === 'number' && e.ls !== e.b ? `<span class="tmore">last ${e.ls}%</span>` : '') + (e.tm ? `<span class="tmore">${escHTML(shortDate(e.tm))}</span>` : '') : '';
         const val = !e ? '<span style="color:#B42323">—</span>' : typeof e.b === 'number' ? `<b>${e.b}%</b>` : e.k ? `✓ ${e.k}` : '✓';
-        html += `<div class="row"><span>${SECS[sc.k].i} ${escHTML(label)}</span><span>${val}</span></div>`;
+        html += `<div class="row"><span>${SECS[sc.k].i} ${escHTML(label)}</span><span>${val}${more}</span></div>`;
         if (e && e.o) html += e.o.map((t, i) => t ? `<div class="ans"><b>${escHTML((b.prompts[i] && b.prompts[i].q) || '')}</b>\n${escHTML(t)}</div>` : '').join('');
         if (e && e.l && b.items) html += `<div class="ans">${b.items.map((it, i) => { const a = e.l[i]; const txt = a === undefined || a === null ? '—' : typeof a === 'boolean' ? (a ? 'T' : 'F') : Array.isArray(a) ? a.map(j => 'abcdefgh'[j]).join(',') : (it.o ? 'abcdefgh'[a] : a); return `${i + 1}. ${txt}`; }).join('   ')}</div>`;
       }));
     });
     d.innerHTML = html + '</div>';
-    $('#del').onclick = async () => { if ($('#del').dataset.sure) { await Cloud.removeStudent(k); delete roster[k]; d.innerHTML = ''; draw(); } else { $('#del').dataset.sure = 1; $('#del').textContent = 'Confirm delete'; } };
+    if ($('#del')) $('#del').onclick = async () => { if ($('#del').dataset.sure) { await Cloud.removeStudent(k); delete roster[k]; d.innerHTML = ''; draw(); } else { $('#del').dataset.sure = 1; $('#del').textContent = 'Confirm delete'; } };
     d.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
   draw();
-  $('#imp').onclick = async () => {
+  if (sheet) teacherCloud(w, list => { roster = {}; list.forEach(x => { roster[x.i] = x; }); $('#detail').innerHTML = ''; draw(); });
+  if (!sheet) $('#imp').onclick = async () => {
     const txt = $('#paste').value; const codes = txt.match(/E3R[01]\.[A-Za-z0-9_-]+/g) || [];
     if (!codes.length) { $('#impmsg').textContent = 'No report code found in the text'; return; }
     let added = 0, failed = 0;
@@ -5265,7 +5284,7 @@ async function viewTeacher() {
     const csv = rows.map(r => r.map(x => `"${String(x).replace(/"/g, '""')}"`).join(',')).join('\n');
     try { await navigator.clipboard.writeText(csv); toast('Table copied ✓ Paste it into Excel'); } catch (e) { $('#paste').value = csv; toast('Select the text in the box and copy it'); }
   };
-  $('#selftest').onclick = async () => { const p = buildPayload(); p.n = p.n || 'Sample student'; p.i = p.i || '0000'; const code = await encodeReport(p); $('#paste').value = code; $('#imp').click(); };
+  if (!sheet) $('#selftest').onclick = async () => { const p = buildPayload(); p.n = p.n || 'Sample student'; p.i = p.i || '0000'; const code = await encodeReport(p); $('#paste').value = code; $('#imp').click(); };
 }
 
 /* ---------- board: schedule & announcements ----------
